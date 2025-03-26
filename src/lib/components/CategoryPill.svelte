@@ -1,12 +1,12 @@
 <script>
-  export let icon = '';
+  export let icon = null;
   export let text = '';
 </script>
 
 <div class="category-pill">
   {#if icon}
     <div class="icon">
-      {@html icon}
+      <svelte:component this={icon} size={16} />
     </div>
   {/if}
   <p>{text}</p>
@@ -28,6 +28,9 @@
 
   .icon {
     color: #0e141b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   p {

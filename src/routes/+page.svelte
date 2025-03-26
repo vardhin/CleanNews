@@ -12,15 +12,21 @@
     <Navbar />
     
     <div class="content-wrapper">
+      <!-- Featured article container with 80% width -->
+      <div class="featured-wrapper">
+        <FeaturedArticle 
+          articles={[
+            {
+              title: featuredArticle.title,
+              description: featuredArticle.description,
+              imageUrl: featuredArticle.imageUrl,
+              stats: { leftAuthors: 12, rightAuthors: 8, centerAuthors: 15 }
+            }
+          ]} 
+        />
+      </div>
+      
       <div class="content-container">
-        <div class="featured-section">
-          <FeaturedArticle 
-            title={featuredArticle.title} 
-            description={featuredArticle.description}
-            imageUrl={featuredArticle.imageUrl}
-          />
-        </div>
-        
         <div class="categories-section">
           {#each categories as category}
             <CategoryPill icon={category.icon} text={category.text} />
@@ -62,23 +68,26 @@
   }
 
   .content-wrapper {
-    padding: 0 10rem;
     display: flex;
     flex: 1;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
+  }
+  
+  /* New featured wrapper with 85% width */
+  .featured-wrapper {
+    width: 95%;
+    margin-bottom: 2rem;
   }
 
   .content-container {
     display: flex;
     flex-direction: column;
     max-width: 960px;
-    flex: 1;
-  }
-
-  .featured-section {
-    padding: 1rem;
+    width: 100%;
+    padding: 0 1rem;
   }
 
   .categories-section {
@@ -86,12 +95,12 @@
     gap: 0.75rem;
     padding: 0.75rem;
     overflow-x: auto;
-    scrollbar-width: none; /* For Firefox */
-    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   .categories-section::-webkit-scrollbar {
-    display: none; /* For Chrome, Safari, and Opera */
+    display: none;
   }
 
   .articles-section {
@@ -104,14 +113,14 @@
   }
 
   @media (max-width: 1024px) {
-    .content-wrapper {
-      padding: 0 2rem;
+    .featured-wrapper {
+      width: 90%;
     }
   }
 
   @media (max-width: 768px) {
-    .content-wrapper {
-      padding: 0 1rem;
+    .featured-wrapper {
+      width: 95%;
     }
   }
 </style>

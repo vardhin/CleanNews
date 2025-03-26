@@ -1,5 +1,5 @@
-/* Import the Newsreader and Noto Sans fonts */
-@import url('https://fonts.googleapis.com/css2?display=swap&family=Newsreader:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900');
+/* Import Roboto Slab for a professional and clean news website */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
 
 :root {
   /* Color variables */
@@ -23,12 +23,18 @@
 }
 
 body {
-  font-family: 'Newsreader', 'Noto Sans', sans-serif;
+  font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--color-background);
   margin: 0;
   padding: 0;
   min-height: 100vh;
   color: var(--color-text-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto Slab', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .glass-morphism {
