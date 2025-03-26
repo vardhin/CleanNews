@@ -1,7 +1,15 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  import { Search, Home, Database } from 'lucide-svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { Search, Home, Database, Sun, Moon } from 'lucide-svelte';
+  import { theme, toggleTheme } from '$lib/stores/theme';
+  
   const dispatch = createEventDispatcher();
+  
+  // Initialize theme on mount
+  onMount(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  });
 </script>
 
 <header class="navbar">
@@ -24,7 +32,15 @@
       <Home size={18} />
       <span>Home</span>
     </a>
-    <div class="profile-avatar" style="background-image: url('https://cdn.usegalileo.ai/sdxl10/df8132a6-fc5e-41ee-853c-89d8872373fb.png');"></div>
+    
+    <!-- Theme toggle button -->
+    <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
+      {#if $theme === 'light'}
+        <Moon size={18} />
+      {:else}
+        <Sun size={18} />
+      {/if}
+    </button>
   </div>
 </header>
 
@@ -157,5 +173,67 @@
 
   .profile-avatar:hover {
     transform: scale(1.05);
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background-color: rgba(231, 237, 243, 0.8);
+    color: #0e141b;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .theme-toggle:hover {
+    background-color: rgba(231, 237, 243, 1);
+    transform: translateY(-1px);
+  }
+  
+  :global([data-theme="dark"]) {
+    --color-background: #0e141b;
+    --color-text-dark: #f8fafc;
+    --color-text-light: #a3c0dd;
+    --color-element: #1d2935;
+  }
+  
+  :global([data-theme="dark"]) .navbar {
+    background: rgba(29, 41, 53, 0.65);
+    border-bottom: 1px solid rgba(45, 55, 72, 0.8);
+  }
+  
+  :global([data-theme="dark"]) .navbar-brand,
+  :global([data-theme="dark"]) .logo,
+  :global([data-theme="dark"]) h2 {
+    color: #f8fafc;
+  }
+  
+  :global([data-theme="dark"]) .search-input-wrapper,
+  :global([data-theme="dark"]) .home-button,
+  :global([data-theme="dark"]) .theme-toggle {
+    background-color: rgba(45, 55, 72, 0.8);
+    color: #f8fafc;
+  }
+  
+  :global([data-theme="dark"]) .search-input-wrapper:focus-within {
+    background-color: rgba(45, 55, 72, 1);
+    box-shadow: 0 0 0 2px rgba(240, 240, 250, 0.1);
+  }
+  
+  :global([data-theme="dark"]) input {
+    color: #f8fafc;
+  }
+  
+  :global([data-theme="dark"]) input::placeholder {
+    color: #a3c0dd;
+  }
+  
+  :global([data-theme="dark"]) .home-button:hover,
+  :global([data-theme="dark"]) .theme-toggle:hover {
+    background-color: rgba(45, 55, 72, 1);
   }
 </style> 

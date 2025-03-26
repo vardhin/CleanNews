@@ -125,6 +125,8 @@
     margin: 0 auto;
     padding: 2rem;
     font-family: 'Newsreader', 'Noto Sans', serif;
+    background-color: var(--color-background);
+    color: var(--color-text-dark);
   }
   
   .article {
@@ -137,20 +139,20 @@
     font-size: 2rem;
     font-weight: 700;
     line-height: 1.2;
-    color: #0e141b;
+    color: var(--color-text-dark);
     margin: 0;
   }
   
   .introduction {
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #2d3748;
+    color: var(--color-text-light);
   }
   
   h2 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #0e141b;
+    color: var(--color-text-dark);
     margin: 0 0 1rem 0;
   }
   
@@ -159,7 +161,7 @@
   }
   
   .publisher-section p {
-    color: #4a5568;
+    color: var(--color-text-light);
     line-height: 1.6;
   }
   
@@ -171,12 +173,12 @@
   
   .spectrum-label {
     font-weight: 500;
-    color: #2d3748;
+    color: var(--color-text-light);
   }
   
   .progress-bar-container {
     height: 10px;
-    background-color: #e2e8f0;
+    background-color: var(--color-element);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -190,7 +192,7 @@
   .percentage {
     align-self: flex-end;
     font-size: 0.9rem;
-    color: #4a5568;
+    color: var(--color-text-light);
   }
   
   .alignment-boxes {
@@ -200,25 +202,26 @@
   
   .alignment-box {
     flex: 1;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background-color: var(--color-card-bg);
   }
   
   .alignment-label {
     font-size: 1rem;
-    color: #4a5568;
+    color: var(--color-text-light);
     margin-bottom: 0.5rem;
   }
   
   .alignment-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--color-text-dark);
   }
   
   .articles-grid {
@@ -232,6 +235,9 @@
     border-radius: 0.5rem;
     overflow: hidden;
     gap: 1.5rem;
+    background-color: var(--color-card-bg);
+    padding: 1rem;
+    border: 1px solid var(--color-border);
   }
   
   .article-content {
@@ -242,24 +248,29 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0 0 0.5rem 0;
-    color: #1a202c;
+    color: var(--color-text-dark);
   }
   
   .article-content p {
-    color: #4a5568;
+    color: var(--color-text-light);
     margin-bottom: 1rem;
     line-height: 1.5;
   }
   
   .read-more-btn {
-    background-color: #f1f5f9;
+    background-color: var(--color-btn-bg);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #0e141b;
+    color: var(--color-text-dark);
     cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .read-more-btn:hover {
+    background-color: var(--color-element);
   }
   
   .article-image {
