@@ -1,239 +1,220 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  import { Search, Home, Database, Sun, Moon } from 'lucide-svelte';
-  import { theme, toggleTheme } from '$lib/stores/theme';
+  import { Search } from 'lucide-svelte';
   
   const dispatch = createEventDispatcher();
   
-  // Initialize theme on mount
-  onMount(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  });
+  // Menu items
+  const mainMenu = [
+    { name: 'Home', url: '/' },
+    { name: 'For You', url: '/for-you' },
+    { name: 'Local', url: '/local' },
+    { name: 'Blindspot', url: '/blindspot' }
+  ];
+  
+  // Categories menu
+  const categories = [
+    { name: 'Israel-Hamas Conflict', url: '/category/israel-hamas' },
+    { name: 'EU', url: '/category/eu' },
+    { name: 'Natural Disasters', url: '/category/natural-disasters' },
+    { name: 'Social Media', url: '/category/social-media' },
+    { name: 'Artificial Intelligence', url: '/category/ai' },
+    { name: 'IT', url: '/category/it' },
+    { name: 'European Union', url: '/category/european-union' },
+    { name: 'Donald Trump', url: '/category/donald-trump' },
+    { name: 'Taxes', url: '/category/taxes' },
+    { name: 'Amazon', url: '/category/amazon' },
+    { name: 'Baseball', url: '/category/baseball' }
+  ];
 </script>
 
 <header class="navbar">
-  <div class="navbar-brand">
-    <div class="logo">
-      <Database size={20} />
-    </div>
-    <h2>CleanNews</h2>
-  </div>
-  <div class="navbar-actions">
-    <form class="search-container" on:submit|preventDefault>
-      <div class="search-input-wrapper">
-        <div class="search-icon">
-          <Search size={18} />
-        </div>
-        <input type="text" placeholder="Search articles..." />
+  <div class="container">
+    <!-- Main navigation -->
+    <div class="main-nav">
+      <div class="logo">
+        <a href="/">GROUND</a>
       </div>
-    </form>
-    <a href="/" class="home-button">
-      <Home size={18} />
-      <span>Home</span>
-    </a>
+      
+      <nav class="primary-nav">
+        {#each mainMenu as item}
+          <a href={item.url} class="nav-item">{item.name}</a>
+        {/each}
+      </nav>
+      
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <input type="text" placeholder="Search" />
+          <div class="search-icon">
+            <Search size={16} />
+          </div>
+        </div>
+      </div>
+      
+      <div class="auth-buttons">
+        <button class="subscribe-btn">Subscribe</button>
+        <button class="login-btn">Login</button>
+      </div>
+    </div>
     
-    <!-- Theme toggle button -->
-    <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
-      {#if $theme === 'light'}
-        <Moon size={18} />
-      {:else}
-        <Sun size={18} />
-      {/if}
-    </button>
+    <!-- Category navigation -->
+    <div class="category-nav">
+      {#each categories as category}
+        <a href={category.url} class="category-item">{category.name}</a>
+      {/each}
+    </div>
   </div>
 </header>
 
 <style>
   .navbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    white-space: nowrap;
-    padding: 0.75rem 2.5rem;
-    font-family: 'Newsreader', 'Noto Sans', sans-serif;
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(231, 237, 243, 0.8);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    flex-direction: column;
+    width: 100%;
+    background-color: #1a1a1a;
+    font-family: sans-serif;
+    color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 100;
   }
-
-  .navbar-brand {
+  
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .main-nav {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    color: #0e141b;
+    padding: 0.8rem 0;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
   }
-
+  
   .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  
+  .logo a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .primary-nav {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #0e141b;
+    gap: 1.5rem;
   }
-
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    margin: 0;
+  
+  .nav-item {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
   }
-
-  .navbar-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 1.25rem;
+  
+  .nav-item:hover {
+    text-decoration: underline;
   }
-
+  
   .search-container {
     position: relative;
-    width: 16rem;
+    width: 220px;
   }
-
+  
   .search-input-wrapper {
     display: flex;
     align-items: center;
-    background-color: rgba(231, 237, 243, 0.8);
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    overflow: hidden;
+    background-color: #333;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
   }
-
-  .search-input-wrapper:focus-within {
-    background-color: rgba(231, 237, 243, 1);
-    box-shadow: 0 0 0 2px rgba(14, 20, 27, 0.1);
-  }
-
-  .search-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-left: 0.75rem;
-    color: #4e7397;
-  }
-
+  
   input {
     flex: 1;
-    height: 2.5rem;
-    border: none;
     background: transparent;
-    padding: 0 0.75rem;
-    font-size: 0.95rem;
-    color: #0e141b;
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+    padding: 0.25rem;
     width: 100%;
   }
-
+  
   input::placeholder {
-    color: #4e7397;
+    color: #aaa;
   }
-
+  
   input:focus {
     outline: none;
   }
-
-  .home-button {
+  
+  .search-icon {
     display: flex;
     align-items: center;
+    color: #aaa;
+    margin-left: 0.25rem;
+  }
+  
+  .auth-buttons {
+    display: flex;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    background-color: rgba(231, 237, 243, 0.8);
-    color: #0e141b;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
+  }
+  
+  .subscribe-btn, .login-btn {
+    padding: 0.4rem 0.75rem;
     border: none;
-    height: 2.5rem;
-  }
-
-  .home-button:hover {
-    background-color: rgba(231, 237, 243, 1);
-    transform: translateY(-1px);
-  }
-
-  .profile-avatar {
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    font-size: 0.8rem;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    font-weight: 500;
   }
-
-  .profile-avatar:hover {
-    transform: scale(1.05);
+  
+  .subscribe-btn {
+    background-color: white;
+    color: #1a1a1a;
   }
-
-  .theme-toggle {
+  
+  .login-btn {
+    background-color: transparent;
+    color: white;
+    border: 1px solid #555;
+  }
+  
+  .category-nav {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.5rem;
-    background-color: rgba(231, 237, 243, 0.8);
-    color: #0e141b;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
   }
   
-  .theme-toggle:hover {
-    background-color: rgba(231, 237, 243, 1);
-    transform: translateY(-1px);
+  .category-nav::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
   
-  :global([data-theme="dark"]) {
-    --color-background: #0e141b;
-    --color-text-dark: #f8fafc;
-    --color-text-light: #a3c0dd;
-    --color-element: #1d2935;
+  .category-item {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.2rem 0;
+    position: relative;
   }
   
-  :global([data-theme="dark"]) .navbar {
-    background: rgba(29, 41, 53, 0.65);
-    border-bottom: 1px solid rgba(45, 55, 72, 0.8);
+  .category-item:hover {
+    color: white;
   }
   
-  :global([data-theme="dark"]) .navbar-brand,
-  :global([data-theme="dark"]) .logo,
-  :global([data-theme="dark"]) h2 {
-    color: #f8fafc;
-  }
-  
-  :global([data-theme="dark"]) .search-input-wrapper,
-  :global([data-theme="dark"]) .home-button,
-  :global([data-theme="dark"]) .theme-toggle {
-    background-color: rgba(45, 55, 72, 0.8);
-    color: #f8fafc;
-  }
-  
-  :global([data-theme="dark"]) .search-input-wrapper:focus-within {
-    background-color: rgba(45, 55, 72, 1);
-    box-shadow: 0 0 0 2px rgba(240, 240, 250, 0.1);
-  }
-  
-  :global([data-theme="dark"]) input {
-    color: #f8fafc;
-  }
-  
-  :global([data-theme="dark"]) input::placeholder {
-    color: #a3c0dd;
-  }
-  
-  :global([data-theme="dark"]) .home-button:hover,
-  :global([data-theme="dark"]) .theme-toggle:hover {
-    background-color: rgba(45, 55, 72, 1);
+  /* Add a small dot after each category item except the last one */
+  .category-item:not(:last-child)::after {
+    content: "•";
+    position: absolute;
+    right: -0.6rem;
+    color: #555;
   }
 </style> 

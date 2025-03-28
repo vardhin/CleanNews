@@ -1,399 +1,181 @@
 <script>
-  import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-svelte';
-  import { onMount, onDestroy } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
-  import { cubicOut } from 'svelte/easing';
-  
-  // Add default empty array to prevent undefined errors
   export let articles = [];
   
-  // Add a check to ensure we have at least one article
-  $: if (articles.length === 0) {
-    articles = [
-      {
-        title: 'Default Article Title',
-        description: 'This is a placeholder for when no articles are provided.',
-        imageUrl: '',
-        stats: { leftAuthors: 0, rightAuthors: 0, centerAuthors: 0 }
-      }
-    ];
-  }
+  // Calculate stats for the first article (featured)
+  $: article = articles[0] || {};
+  $: stats = article.stats || { leftAuthors: 0, centerAuthors: 0, rightAuthors: 0 };
+  $: totalCoverage = stats.leftAuthors + stats.centerAuthors + stats.rightAuthors;
   
-  // Current article index
-  let currentIndex = 0;
-  let interval;
-  
-  // Enhanced navigation functions
-  function previousArticle() {
-    currentIndex = (currentIndex - 1 + articles.length) % articles.length;
-    resetInterval();
-  }
-  
-  function nextArticle() {
-    currentIndex = (currentIndex + 1) % articles.length;
-    resetInterval();
-  }
-  
-  function goToArticle(index) {
-    currentIndex = index;
-    resetInterval();
-  }
-  
-  // Reset interval helper
-  function resetInterval() {
-    clearInterval(interval);
-    interval = setInterval(nextArticle, 5000);
-  }
-  
-  // Set up automatic rotation
-  onMount(() => {
-    interval = setInterval(nextArticle, 5000);
-  });
-  
-  // Clean up interval on component destruction
-  onDestroy(() => {
-    clearInterval(interval);
-  });
+  // Calculate percentages for bias indicators
+  $: leftPercentage = totalCoverage ? Math.round((stats.leftAuthors / totalCoverage) * 100) : 0;
+  $: centerPercentage = totalCoverage ? Math.round((stats.centerAuthors / totalCoverage) * 100) : 0;
+  $: rightPercentage = totalCoverage ? Math.round((stats.rightAuthors / totalCoverage) * 100) : 0;
 </script>
 
-<div class="featured-container">
-  <!-- Add a condition to prevent error when articles[currentIndex] is undefined -->
-  {#if articles && articles[currentIndex]}
-    <div class="featured-article" style="background-image: url('{articles[currentIndex].imageUrl}');">
-      <div class="overlay"></div>
-      
-      <!-- Navigation arrows -->
-      <button class="nav-arrow left" on:click={previousArticle} aria-label="Previous article">
-        <ChevronLeft size={28} />
-      </button>
-      
-      <button class="nav-arrow right" on:click={nextArticle} aria-label="Next article">
-        <ChevronRight size={28} />
-      </button>
-      
-      <div class="featured-content" in:fade={{ duration: 400, easing: cubicOut }}>
-        <!-- Left half: Article summary -->
-        <div class="summary-section" in:slide={{ delay: 200, duration: 400, axis: 'x', easing: cubicOut }}>
-          <div class="text-content">
-            <h1>{articles[currentIndex].title}</h1>
-            <h2>{articles[currentIndex].description}</h2>
-          </div>
-          <button class="read-button">
-            <span>Read Now</span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
+<div class="featured-article">
+  <div class="featured-content" style="background-image: url('{article.imageUrl}')">
+    <div class="overlay">
+      <div class="article-info">
+        <h2 class="title">{article.title}</h2>
+        <p class="description">{article.description}</p>
         
-        <!-- Right half: Statistics -->
-        <div class="stats-section" in:slide={{ delay: 300, duration: 400, axis: 'x', easing: cubicOut }}>
-          <h3>Author Distribution</h3>
-          <div class="stats-grid">
-            <div class="stat-box">
-              <span class="stat-number">{articles[currentIndex].stats.leftAuthors}</span>
-              <span class="stat-label">Left-Leaning<br>Authors</span>
+        <div class="article-metrics">
+          <div class="bias-wrapper">
+            <div class="bias-meter">
+              <div class="bias-label left">LEFT</div>
+              <div class="bias-label center">CENTER</div>
+              <div class="bias-label right">RIGHT</div>
             </div>
-            <div class="stat-box">
-              <span class="stat-number">{articles[currentIndex].stats.centerAuthors}</span>
-              <span class="stat-label">Centrist<br>Authors</span>
+            
+            <div class="bias-bars">
+              <div class="bias-bar left" style="width: {leftPercentage}%"></div>
+              <div class="bias-bar center" style="width: {centerPercentage}%"></div>
+              <div class="bias-bar right" style="width: {rightPercentage}%"></div>
             </div>
-            <div class="stat-box">
-              <span class="stat-number">{articles[currentIndex].stats.rightAuthors}</span>
-              <span class="stat-label">Right-Leaning<br>Authors</span>
+            
+            <div class="bias-stats">
+              <div class="stat-item">{leftPercentage}%</div>
+              <div class="stat-item">{centerPercentage}%</div>
+              <div class="stat-item">{rightPercentage}%</div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Navigation dots -->
-      <div class="navigation-dots">
-        {#each articles as _, i}
-          <button 
-            class="dot {i === currentIndex ? 'active' : ''}" 
-            on:click={() => goToArticle(i)}
-            aria-label="Go to article {i + 1}"
-          ></button>
-        {/each}
       </div>
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>
-  .featured-container {
-    width: 80%;
-    margin: 3rem auto;
-  }
-
   .featured-article {
-    position: relative;
-    display: flex;
-    flex-direction: column;
     width: 100%;
-    height: 650px;
+    max-width: 1000px;
+    margin: 0 auto;
+    height: 400px;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .featured-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-size: cover;
-    border-radius: 1.25rem;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    transition: all 0.5s ease;
   }
   
   .overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
-    z-index: 1;
-  }
-
-  .nav-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.8) 100%);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: none;
+    align-items: flex-end;
+    padding: 1.5rem;
+  }
+  
+  .article-info {
     color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    opacity: 0.7;
+    max-width: 700px;
   }
   
-  .nav-arrow:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-50%) scale(1.1);
-    opacity: 1;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-  }
-  
-  .nav-arrow.left {
-    left: 20px;
-  }
-  
-  .nav-arrow.right {
-    right: 20px;
-  }
-
-  .featured-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    z-index: 2;
-    padding: 3.5rem;
-  }
-
-  .summary-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-
-  .text-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    max-width: 600px;
-  }
-
-  h1 {
-    color: #ffffff;
-    font-size: 3rem;
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.033em;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-
-  h2 {
-    color: #f0f0f0;
-    font-size: 1.25rem;
-    font-weight: 400;
-    line-height: 1.6;
-    margin: 0;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  }
-  
-  h3 {
-    color: #ffffff;
-    font-size: 1.5rem;
+  .title {
+    font-size: 1.8rem;
+    line-height: 1.2;
     font-weight: 700;
-    margin: 0 0 1.5rem 0;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    margin: 0 0 0.8rem 0;
   }
-
-  .read-button {
-    display: flex;
-    width: fit-content;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.5rem;
-    height: 3.25rem;
-    padding: 0 1.75rem;
-    background-color: #1980e6;
-    color: #f8fafc;
+  
+  .description {
     font-size: 1rem;
-    font-weight: 700;
-    line-height: normal;
-    letter-spacing: 0.015em;
-    border: none;
-    transition: all 0.3s ease;
-    gap: 0.5rem;
-  }
-
-  .read-button:hover {
-    background-color: #1670cc;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    line-height: 1.4;
+    margin: 0 0 1.5rem 0;
+    opacity: 0.9;
   }
   
-  .stats-section {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    padding: 2.5rem;
-    max-width: 100%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  .article-metrics {
+    margin-top: 1.5rem;
   }
   
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-  }
-  
-  .stat-box {
+  .bias-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 0.75rem;
-    padding: 1.75rem 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    gap: 0.3rem;
+    max-width: 400px;
   }
   
-  .stat-box:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  }
-  
-  .stat-number {
-    font-size: 2.75rem;
-    font-weight: 900;
-    color: #ffffff;
-    line-height: 1;
-    margin-bottom: 0.75rem;
-  }
-  
-  .stat-label {
-    font-size: 0.875rem;
-    color: #f0f0f0;
-    font-weight: 500;
-  }
-  
-  .navigation-dots {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
+  .bias-meter {
     display: flex;
-    gap: 0.75rem;
-    z-index: 3;
-    padding: 0.75rem 1.25rem;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border-radius: 2rem;
+    justify-content: space-between;
   }
   
-  .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  .bias-label {
+    font-size: 0.7rem;
+    font-weight: 600;
   }
   
-  .dot.active {
-    background: #ffffff;
-    transform: scale(1.2);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  .bias-label.left {
+    text-align: left;
   }
-
-  @media (min-width: 864px) {
-    .featured-article {
-      height: 750px;
-    }
-    
-    .featured-content {
-      flex-direction: row;
-      gap: 3.5rem;
-    }
-    
-    .summary-section {
-      flex: 1;
-      margin-bottom: 0;
-    }
-    
-    .stats-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      max-width: 450px;
-    }
-    
-    h1 {
-      font-size: 3.75rem;
-    }
-    
-    h2 {
-      font-size: 1.35rem;
-    }
+  
+  .bias-label.center {
+    text-align: center;
+  }
+  
+  .bias-label.right {
+    text-align: right;
+  }
+  
+  .bias-bars {
+    display: flex;
+    height: 8px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .bias-bar {
+    height: 100%;
+  }
+  
+  .bias-bar.left {
+    background-color: #d32f2f;
+  }
+  
+  .bias-bar.center {
+    background-color: #757575;
+  }
+  
+  .bias-bar.right {
+    background-color: #1976d2;
+  }
+  
+  .bias-stats {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .stat-item {
+    font-size: 0.8rem;
+    font-weight: 600;
   }
   
   @media (max-width: 768px) {
-    .featured-content {
-      padding: 2rem;
+    .featured-article {
+      height: 300px;
     }
     
-    .stats-grid {
-      grid-template-columns: 1fr;
+    .title {
+      font-size: 1.4rem;
     }
     
-    h1 {
-      font-size: 2.5rem;
-    }
-    
-    h2 {
-      font-size: 1.1rem;
-    }
-    
-    .nav-arrow {
-      width: 40px;
-      height: 40px;
+    .description {
+      font-size: 0.9rem;
     }
   }
 </style> 
