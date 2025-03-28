@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const articleSchema = new mongoose.Schema({
     serialNumber: {
@@ -38,4 +38,4 @@ const articleSchema = new mongoose.Schema({
 // Only keep the compound index
 articleSchema.index({ category: 1, serialNumber: 1 }, { unique: true });
 
-module.exports = mongoose.model('Article', articleSchema); 
+export default mongoose.model('Article', articleSchema); 
