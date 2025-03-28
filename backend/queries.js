@@ -62,3 +62,72 @@ export const getArticleByCategoryAndSerial = async (Article, category, serialNum
 // Example usage:
 // const article = await getArticleByCategoryAndSerial(Article, 'Technology', 123);
 // console.log('Article:', article); 
+
+// MongoDB query to get featured articles by category
+export const getFeaturedArticlesByCategory = async (FeaturedArticle, category) => {
+    try {
+        const featuredArticles = await FeaturedArticle.find({
+            category: category
+        }).sort({ timestamp: -1 });
+
+        return featuredArticles;
+    } catch (error) {
+        console.error('Error fetching featured articles by category:', error);
+        throw error;
+    }
+};
+
+// Example usage:
+// const featuredArticles = await getFeaturedArticlesByCategory(FeaturedArticle, 'Technology');
+// console.log('Featured Articles:', featuredArticles); 
+
+// MongoDB query to get all featured articles
+export const getAllFeaturedArticles = async (FeaturedArticle) => {
+    try {
+        const featuredArticles = await FeaturedArticle.find().sort({ timestamp: -1 });
+        return featuredArticles;
+    } catch (error) {
+        console.error('Error fetching all featured articles:', error);
+        throw error;
+    }
+};
+
+// Example usage:
+// const allFeaturedArticles = await getAllFeaturedArticles(FeaturedArticle);
+// console.log('All Featured Articles:', allFeaturedArticles);
+
+// MongoDB query to get latest featured article and its related articles by category
+export const getLatestFeaturedArticleWithRelatedArticles = async (FeaturedArticle, Article, category) => {
+    try {
+        // Get the latest featured article for the category
+        const latestFeaturedArticle = await FeaturedArticle.findOne({
+            category: category
+        }).sort({ timestamp: -1 });
+
+        if (!latestFeaturedArticle) {
+            return {
+                featuredArticle: null,
+                relatedArticles: []
+            };
+        }
+
+        // Get all articles whose serial numbers are in the featured article's serialNumbers array
+        const relatedArticles = await Article.find({
+            category: category,
+            serialNumber: { $in: latestFeaturedArticle.serialNumbers }
+        }).sort({ serialNumber: -1 });
+
+        return {
+            featuredArticle: latestFeaturedArticle,
+            relatedArticles: relatedArticles
+        };
+    } catch (error) {
+        console.error('Error fetching latest featured article and related articles:', error);
+        throw error;
+    }
+};
+
+// Example usage:
+// const result = await getLatestFeaturedArticleWithRelatedArticles(FeaturedArticle, Article, 'Technology');
+// console.log('Latest Featured Article:', result.featuredArticle);
+// console.log('Related Articles:', result.relatedArticles); 
