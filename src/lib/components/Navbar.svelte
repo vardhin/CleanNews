@@ -1,6 +1,8 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  import { Search } from 'lucide-svelte';
+  import { Search, Sun, Moon } from 'lucide-svelte';
+  import { theme, toggleTheme } from '$lib/stores/theme';
+  import { browser } from '$app/environment';
   
   const dispatch = createEventDispatcher();
   
@@ -11,21 +13,14 @@
     { name: 'Local', url: '/local' },
     { name: 'Blindspot', url: '/blindspot' }
   ];
-  
-  // Categories menu
-  const categories = [
-    { name: 'Israel-Hamas Conflict', url: '/category/israel-hamas' },
-    { name: 'EU', url: '/category/eu' },
-    { name: 'Natural Disasters', url: '/category/natural-disasters' },
-    { name: 'Social Media', url: '/category/social-media' },
-    { name: 'Artificial Intelligence', url: '/category/ai' },
-    { name: 'IT', url: '/category/it' },
-    { name: 'European Union', url: '/category/european-union' },
-    { name: 'Donald Trump', url: '/category/donald-trump' },
-    { name: 'Taxes', url: '/category/taxes' },
-    { name: 'Amazon', url: '/category/amazon' },
-    { name: 'Baseball', url: '/category/baseball' }
-  ];
+
+  // Apply theme on component mount
+  onMount(() => {
+    // Set data-theme attribute on document element
+    if (browser) {
+      document.documentElement.setAttribute('data-theme', $theme);
+    }
+  });
 </script>
 
 <header class="navbar">
@@ -33,7 +28,7 @@
     <!-- Main navigation -->
     <div class="main-nav">
       <div class="logo">
-        <a href="/">GROUND</a>
+        <a href="/">CLEAN NEWS</a>
       </div>
       
       <nav class="primary-nav">
@@ -42,26 +37,24 @@
         {/each}
       </nav>
       
-      <div class="search-container">
-        <div class="search-input-wrapper">
-          <input type="text" placeholder="Search" />
-          <div class="search-icon">
-            <Search size={16} />
+      <div class="actions">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <input type="text" placeholder="Search" />
+            <div class="search-icon">
+              <Search size={16} />
+            </div>
           </div>
         </div>
+        
+        <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
+          {#if $theme === 'light'}
+            <Moon size={18} />
+          {:else}
+            <Sun size={18} />
+          {/if}
+        </button>
       </div>
-      
-      <div class="auth-buttons">
-        <button class="subscribe-btn">Subscribe</button>
-        <button class="login-btn">Login</button>
-      </div>
-    </div>
-    
-    <!-- Category navigation -->
-    <div class="category-nav">
-      {#each categories as category}
-        <a href={category.url} class="category-item">{category.name}</a>
-      {/each}
     </div>
   </div>
 </header>
@@ -71,13 +64,24 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: #1a1a1a;
+    background-color: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     font-family: sans-serif;
     color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+  }
+  
+  :global([data-theme="light"]) .navbar {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   }
   
   .container {
@@ -92,7 +96,6 @@
     align-items: center;
     padding: 0.8rem 0;
     justify-content: space-between;
-    border-bottom: 1px solid #333;
   }
   
   .logo {
@@ -102,7 +105,7 @@
   }
   
   .logo a {
-    color: white;
+    color: inherit;
     text-decoration: none;
   }
   
@@ -112,13 +115,35 @@
   }
   
   .nav-item {
-    color: white;
+    color: inherit;
     text-decoration: none;
     font-size: 0.9rem;
+    position: relative;
   }
   
   .nav-item:hover {
-    text-decoration: underline;
+    text-decoration: none;
+  }
+  
+  .nav-item:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  
+  .nav-item:hover:after {
+    width: 100%;
+  }
+  
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
   
   .search-container {
@@ -129,23 +154,42 @@
   .search-input-wrapper {
     display: flex;
     align-items: center;
-    background-color: #333;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     padding: 0.25rem 0.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  :global([data-theme="light"]) .search-input-wrapper {
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-input-wrapper:focus-within {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  }
+  
+  :global([data-theme="light"]) .search-input-wrapper:focus-within {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
   }
   
   input {
     flex: 1;
     background: transparent;
     border: none;
-    color: white;
+    color: inherit;
     font-size: 0.9rem;
     padding: 0.25rem;
     width: 100%;
   }
   
   input::placeholder {
-    color: #aaa;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  :global([data-theme="light"]) input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
   }
   
   input:focus {
@@ -155,66 +199,36 @@
   .search-icon {
     display: flex;
     align-items: center;
-    color: #aaa;
+    color: inherit;
+    opacity: 0.6;
     margin-left: 0.25rem;
   }
   
-  .auth-buttons {
+  .theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: inherit;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
-    gap: 0.5rem;
-  }
-  
-  .subscribe-btn, .login-btn {
-    padding: 0.4rem 0.75rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-weight: 500;
+    transition: all 0.3s ease;
   }
   
-  .subscribe-btn {
-    background-color: white;
-    color: #1a1a1a;
+  :global([data-theme="light"]) .theme-toggle {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
   
-  .login-btn {
-    background-color: transparent;
-    color: white;
-    border: 1px solid #555;
+  .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
   }
   
-  .category-nav {
-    display: flex;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-  
-  .category-nav::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-  
-  .category-item {
-    color: #ccc;
-    text-decoration: none;
-    font-size: 0.8rem;
-    padding: 0.2rem 0;
-    position: relative;
-  }
-  
-  .category-item:hover {
-    color: white;
-  }
-  
-  /* Add a small dot after each category item except the last one */
-  .category-item:not(:last-child)::after {
-    content: "•";
-    position: absolute;
-    right: -0.6rem;
-    color: #555;
+  :global([data-theme="light"]) .theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
   }
 </style> 
