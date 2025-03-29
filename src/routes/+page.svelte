@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import Navbar from '$lib/components/Navbar.svelte';
+    import Carousel from '$lib/components/carousel.svelte';
     import { theme } from '$lib/stores/theme';
     
     // Get data from the page load function
@@ -12,16 +13,15 @@
     const newsByCategory = data.newsByCategory || {};
     const featuredNews = data.featuredNews || [];
     
-    // Create a flat array of featured articles for the carousel
-    $: featuredNewsByCategory = categories
-      .map(category => featuredNews.find(item => item.category === category))
-      .filter(item => item);
+    // Debug
+    console.log("Featured News:", featuredNews);
     
-    let currentSlide = 0;
     let activeCategory = categories.length > 0 ? categories[0] : "";
     let showNavbar = true;
     let lastScrollY = 0;
     let ticking = false;
+    let hasScrolled = false;
+    let isAtHero = true;  // Track if we're at hero section
     
     // Simplified card sizes for better balance
     const cardSizes = [
@@ -98,14 +98,6 @@
       return categoryLayouts[category][index % categoryLayouts[category].length];
     }
     
-    function nextSlide() {
-      currentSlide = (currentSlide + 1) % featuredNews.length;
-    }
-    
-    function prevSlide() {
-      currentSlide = (currentSlide - 1 + featuredNews.length) % featuredNews.length;
-    }
-    
     function scrollToCategory(category) {
       activeCategory = category;
       const element = document.getElementById(category);
@@ -114,11 +106,36 @@
       }
     }
     
+    // Function to find the current section in view
+    function getCurrentSection() {
+      const sections = categories.map(category => {
+        const element = document.getElementById(category);
+        if (!element) return null;
+        const rect = element.getBoundingClientRect();
+        return {
+          category,
+          top: rect.top,
+          bottom: rect.bottom
+        };
+      }).filter(Boolean);
+
+      // Find the first section that is currently in view
+      const currentSection = sections.find(section => 
+        section.top <= 150 && section.bottom > 150
+      );
+
+      return currentSection?.category || categories[0];
+    }
+    
     function handleScroll() {
       const currentScrollY = window.scrollY;
+      hasScrolled = true;
       
       if (!ticking) {
         window.requestAnimationFrame(() => {
+          // Check if we're at the hero section (allowing some buffer)
+          isAtHero = currentScrollY < 100;
+          
           if (currentScrollY > lastScrollY && currentScrollY > 50) {
             // Scrolling down and not at the top
             showNavbar = false;
@@ -126,6 +143,9 @@
             // Scrolling up or at the top
             showNavbar = true;
           }
+          
+          // Update active category based on scroll position
+          activeCategory = getCurrentSection();
           
           lastScrollY = currentScrollY;
           ticking = false;
@@ -135,13 +155,10 @@
       }
     }
     
-    // Auto-advance carousel and setup scroll listener
+    // Setup scroll listener
     onMount(() => {
-      const carouselInterval = setInterval(nextSlide, 5000);
       window.addEventListener('scroll', handleScroll);
-      
       return () => {
-        clearInterval(carouselInterval);
         window.removeEventListener('scroll', handleScroll);
       };
     });
@@ -250,106 +267,6 @@
       box-shadow: 0 0 25px var(--glass-shadow);
     }
     
-    /* Hero carousel */
-    .carousel {
-      position: relative;
-      height: 70vh;
-      min-height: 500px;
-      overflow: hidden;
-    }
-    
-    .carousel-slide {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-    
-    .carousel-slide.active {
-      opacity: 1;
-    }
-    
-    .carousel-content {
-      padding: 4rem;
-      z-index: 2;
-      color: var(--text-primary);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .carousel-image {
-      position: relative;
-      height: 100%;
-      overflow: hidden;
-    }
-    
-    .carousel-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    .carousel-fade {
-      position: absolute;
-      top: 0;
-      left: -50%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to right, var(--bg-primary) 0%, transparent 100%);
-      z-index: 1;
-    }
-    
-    .carousel-title {
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1.2;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(120deg, var(--accent-color), var(--text-primary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    
-    .carousel-excerpt {
-      font-size: 1.2rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-    
-    .carousel-nav {
-      position: absolute;
-      bottom: 30px;
-      right: 40px;
-      z-index: 3;
-      display: flex;
-      gap: 15px;
-    }
-    
-    .nav-button {
-      width: 50px;
-      height: 50px;
-      background: var(--glass-dark-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-      transition: all 0.3s ease;
-    }
-    
-    .nav-button:hover {
-      background: var(--glass-bg);
-    }
-    
     /* Navbar transition */
     .navbar-container {
       position: sticky;
@@ -365,40 +282,70 @@
     /* Category pills */
     .pill-container {
       display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 20px 0;
-      scrollbar-width: none;
+      gap: 1rem;
+      padding: 1rem 2rem;
       position: sticky;
       top: 0;
       z-index: 5;
       background: var(--glass-dark-bg);
-      transition: top 0.3s ease, background-color 0.3s ease;
+      transition: all 0.3s ease;
+      transform: translateY(0);
+      opacity: 1;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      justify-content: center;
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 4px 12px var(--glass-shadow);
     }
     
-    /* When navbar is hidden, adjust pill container top position */
-    :global(.navbar-hidden) + .pill-container {
-      top: 0;
-    }
-    
-    .pill-container::-webkit-scrollbar {
-      display: none;
+    /* Hide pill container when navbar is showing AND user has scrolled AND not at hero */
+    :global(.has-scrolled:not(.at-hero) .navbar-container:not(.navbar-hidden) + * + .pill-container) {
+      transform: translateY(-100%);
+      opacity: 0;
     }
     
     .pill {
-      padding: 10px 25px;
-      white-space: nowrap;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.3s ease;
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .pill::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-color);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .pill:hover {
+      background: var(--glass-bg);
+      transform: translateY(-1px);
     }
     
     .pill.active {
-      background: var(--pill-active-bg);
-      box-shadow: 0 0 15px var(--pill-active-shadow);
+      background: var(--glass-bg);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+    
+    .pill.active::after {
+      transform: scaleX(1);
     }
     
     /* Pinterest-style masonry layout */
@@ -580,75 +527,29 @@
     }
     
     @media (max-width: 768px) {
-      .carousel-slide {
-        grid-template-columns: 1fr;
-      }
-      
-      .carousel-image {
-        display: none;
-      }
-      
-      .carousel-content {
-        padding: 2rem;
-      }
-      
-      .carousel-title {
-        font-size: 2rem;
-      }
-      
-      .carousel-excerpt {
-        font-size: 1rem;
-      }
-    }
-
-    .carousel-category {
-      font-size: 1rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: var(--accent-color);
-      margin-bottom: 1rem;
-      letter-spacing: 0.05em;
+      /* Mobile styles for other components */
     }
   </style>
   
-  <div class="app">
+  {#if categories.length > 0}
+  <div class="app" class:has-scrolled={hasScrolled} class:at-hero={isAtHero}>
     <!-- Navbar -->
     <div class="navbar-container" class:navbar-hidden={!showNavbar}>
       <Navbar />
     </div>
     
     <!-- Hero Section with Carousel -->
-    <section class="carousel">
-      {#each featuredNews as item, index}
-        <div class="carousel-slide {index === currentSlide ? 'active' : ''}">
-          <div class="carousel-content glass-dark sharp-edge">
-            <div class="carousel-category">{item.category}</div>
-            <h1 class="carousel-title">{item.keyInsights}</h1>
-            <p class="carousel-excerpt">{item.comprehensiveSummary}</p>
-            <a href={`/article/${item.category}/${item.serialNumbers[0]}`} class="btn-primary sharp-edge-reverse">
-              Read More
-            </a>
-          </div>
-          <div class="carousel-image">
-            <img src={item.imageUrl} alt={item.keyInsights} />
-            <div class="carousel-fade"></div>
-          </div>
-        </div>
-      {/each}
-      <div class="carousel-nav">
-        <button class="nav-button" on:click={prevSlide}>←</button>
-        <button class="nav-button" on:click={nextSlide}>→</button>
-      </div>
-    </section>
+    <Carousel {featuredNews} />
     
     <!-- Category Pills (Sticky Navigation) -->
-    <div class="pill-container">
+    <div class="pill-container glass-dark">
       {#each categories as category}
-        <div 
-          class="pill glass {activeCategory === category ? 'active' : ''}" 
-          on:click={() => scrollToCategory(category)}>
+        <button 
+          class="pill {activeCategory === category ? 'active' : ''}" 
+          on:click={() => scrollToCategory(category)}
+          aria-label="Navigate to {category} section">
           {category}
-        </div>
+        </button>
       {/each}
     </div>
     
@@ -716,3 +617,4 @@
       </div>
     </section>
   </div>
+  {/if}

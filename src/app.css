@@ -20,6 +20,18 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 2.5rem;
   --spacing-3xl: 3rem;
+  
+  /* Accent color for buttons and highlights */
+  --accent-color: #1980e6;
+  
+  /* Carousel & glass variables */
+  --text-primary: var(--color-text-dark);
+  --text-secondary: var(--color-text-light);
+  --bg-primary: var(--color-background);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-dark-bg: rgba(245, 245, 245, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-shadow: rgba(0, 0, 0, 0.1);
 }
 
 /* Dark theme variables */
@@ -33,6 +45,16 @@
   --color-border: rgba(45, 55, 72, 0.8);
   --color-box-shadow: rgba(0, 0, 0, 0.2);
   --color-btn-bg: #2d3748;
+  --accent-color: #3b94ee;
+  
+  /* Carousel & glass variables for dark theme */
+  --text-primary: var(--color-text-dark);
+  --text-secondary: var(--color-text-light);
+  --bg-primary: var(--color-background);
+  --glass-bg: rgba(15, 15, 15, 0.7);
+  --glass-dark-bg: rgba(5, 5, 5, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -73,6 +95,30 @@ p {
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Sharp edges styling */
+.sharp-edge-reverse {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 85%);
 }
 
 /* Responsive breakpoints */
