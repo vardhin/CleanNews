@@ -10,7 +10,8 @@ import {
     getArticleByCategoryAndSerial,
     getFeaturedArticlesByCategory,
     getAllFeaturedArticles,
-    getLatestFeaturedArticleWithRelatedArticles
+    getLatestFeaturedArticleWithRelatedArticles,
+    searchArticlesByTitle
 } from './queries.js';
 
 // Load environment variables
@@ -66,6 +67,28 @@ app.get('/api/article/:category/:serialNumber', async (req, res) => {
     } catch (error) {
         console.error('Error in /api/article/:category/:serialNumber endpoint:', error);
         res.status(500).json({ error: 'Failed to fetch article' });
+    }
+});
+
+// Search articles by title
+app.get('/api/search', async (req, res) => {
+    try {
+        const { query, limit } = req.query;
+        
+        if (!query) {
+            return res.status(400).json({ error: 'Search query is required' });
+        }
+        
+        const articles = await searchArticlesByTitle(
+            Article, 
+            query, 
+            limit ? parseInt(limit) : 10
+        );
+        
+        res.json(articles);
+    } catch (error) {
+        console.error('Error in /api/search endpoint:', error);
+        res.status(500).json({ error: 'Failed to search articles' });
     }
 });
 

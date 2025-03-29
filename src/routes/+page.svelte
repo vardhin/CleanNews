@@ -23,6 +23,69 @@
     let hasScrolled = false;
     let isAtHero = true;  // Track if we're at hero section
     
+    // Search state
+    let isSearching = false;
+    let searchQuery = '';
+    let searchResults = [];
+    let isSearchLoading = false;
+    let searchError = null;
+    
+    // Handle search from navbar
+    async function handleSearch(event) {
+      searchQuery = event.detail.query;
+      if (!searchQuery) return;
+      
+      isSearching = true;
+      isSearchLoading = true;
+      searchError = null;
+      
+      try {
+        // Use a timeout to prevent hanging in case the server is down
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&limit=10`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Search request failed:', response.status, errorText);
+          
+          if (response.status === 404) {
+            throw new Error('Search endpoint not found. Make sure the backend server is running.');
+          } else {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          }
+        }
+        
+        searchResults = await response.json();
+        isSearchLoading = false;
+      } catch (error) {
+        console.error('Search error:', error);
+        
+        if (error.name === 'AbortError') {
+          searchError = 'Search request timed out. Backend server might not be running.';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          searchError = 'Cannot connect to the backend server. Please make sure it is running.';
+        } else {
+          searchError = error.message || 'Unknown error occurred';
+        }
+        
+        isSearchLoading = false;
+      }
+    }
+    
+    // Clear search and return to normal view
+    function clearSearch() {
+      isSearching = false;
+      searchQuery = '';
+      searchResults = [];
+      searchError = null;
+    }
+    
     // Simplified card sizes for better balance
     const cardSizes = [
       { name: 'standard', cols: 4, rows: 2 },    // Standard 4:3 article card
@@ -437,6 +500,122 @@
       scroll-margin-top: 120px; /* Adjusted to account for navbar + pills */
     }
     
+    /* Search results styles */
+    .search-section {
+      padding: 40px 0;
+    }
+    
+    .search-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .search-result-card {
+      display: flex;
+      padding: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--card-bg);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .search-result-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .search-result-image {
+      width: 180px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+    
+    .search-result-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .search-result-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .search-result-summary {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
+    .search-result-meta {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--accent-color);
+      color: var(--accent-color);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+    
+    .search-loading, .search-error {
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .search-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 5px solid var(--glass-border);
+      border-bottom-color: var(--accent-color);
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
+    }
+    
+    @keyframes rotation {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    
     /* About section */
     .about-section {
       padding: 100px 0;
@@ -507,6 +686,17 @@
       .news-grid {
         column-count: 3;
       }
+      
+      .search-result-card {
+        flex-direction: column;
+      }
+      
+      .search-result-image {
+        width: 100%;
+        height: 200px;
+        margin-right: 0;
+        margin-bottom: 16px;
+      }
     }
     
     @media (max-width: 600px) {
@@ -517,6 +707,12 @@
       
       .news-card {
         margin-bottom: 6px;
+      }
+      
+      .search-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
       }
     }
     
@@ -535,86 +731,144 @@
   <div class="app" class:has-scrolled={hasScrolled} class:at-hero={isAtHero}>
     <!-- Navbar -->
     <div class="navbar-container" class:navbar-hidden={!showNavbar}>
-      <Navbar />
+      <Navbar on:search={handleSearch} />
     </div>
     
-    <!-- Hero Section with Carousel -->
-    <Carousel {featuredNews} />
-    
-    <!-- Category Pills (Sticky Navigation) -->
-    <div class="pill-container glass-dark">
-      {#each categories as category}
-        <button 
-          class="pill {activeCategory === category ? 'active' : ''}" 
-          on:click={() => scrollToCategory(category)}
-          aria-label="Navigate to {category} section">
-          {category}
-        </button>
-      {/each}
-    </div>
-    
-    <!-- All News Sections -->
-    {#each categories as category}
-      <section id={category} class="container news-section">
-        <h2 class="text-3xl font-bold mb-8 capitalize">{category}</h2>
+    {#if isSearching}
+      <!-- Search Results -->
+      <section class="container search-section">
+        <div class="search-info">
+          <h2 class="text-2xl font-bold">Search Results for "{searchQuery}"</h2>
+          <button class="btn-back" on:click={clearSearch}>
+            Back to Home
+          </button>
+        </div>
         
-        <!-- News Grid -->
-        <div class="news-grid">
-          {#if newsByCategory[category]}
-            {#each newsByCategory[category] as item, i}
-              {@const sizeName = item.size || getCardSize(i, category)}
-              <a href={item.link} 
-                 class="news-card glass glow {sizeName}"
-                 target="_blank"
-                 rel="noopener noreferrer">
-                <img src={item.image || item.imageUrl || "/placeholder.svg"} 
-                     alt={item.title} 
-                     class="news-card-image"
-                     on:load={async (e) => {
-                       if (!item.size && (item.image || item.imageUrl)) {
-                         // Set natural image dimensions
-                         const img = e.target;
-                         const ratio = img.naturalWidth / img.naturalHeight;
-                         img.style.height = ratio < 1 ? '340px' : ratio > 1.5 ? '220px' : '280px';
-                         item.size = await getOptimalCardSize(item.image || item.imageUrl);
-                       }
-                     }} />
-                <div class="news-card-overlay"></div>
-                <div class="news-card-content">
-                  <h3>{item.title}</h3>
-                  <p>{item.excerpt || item.summary}</p>
+        {#if isSearchLoading}
+          <div class="search-loading">
+            <div class="loader"></div>
+            <p>Searching for articles...</p>
+          </div>
+        {:else if searchError}
+          <div class="search-error glass-dark p-8 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4">Unable to complete search</h3>
+            <p class="mb-4">{searchError}</p>
+            <div class="search-troubleshoot">
+              <h4 class="font-medium mb-2">Troubleshooting steps:</h4>
+              <ul class="list-disc pl-5 space-y-1">
+                <li>Check if the backend server is running</li>
+                <li>Verify your internet connection</li>
+                <li>Try searching for a different term</li>
+                <li>Refresh the page and try again</li>
+              </ul>
+            </div>
+          </div>
+        {:else if searchResults.length === 0}
+          <div class="search-error glass-dark p-6">
+            <p class="mb-4">No articles found matching your search query "{searchQuery}".</p>
+            <p class="text-sm text-gray-400">Note: Make sure the backend server is running with <code class="bg-black bg-opacity-30 px-1 py-0.5 rounded">npm run api</code> in the backend directory.</p>
+          </div>
+        {:else}
+          <div class="search-results-list">
+            {#each searchResults as article}
+              <a href={article.link} class="search-result-card glass glow" target="_blank" rel="noopener noreferrer">
+                <img 
+                  src={article.image || "/placeholder.svg"} 
+                  alt={article.title} 
+                  class="search-result-image" 
+                />
+                <div class="search-result-content">
+                  <h3 class="search-result-title">{article.title}</h3>
+                  <p class="search-result-summary">{article.summary}</p>
+                  <div class="search-result-meta">
+                    <span>{article.category}</span>
+                    <span>Source: {article.source}</span>
+                  </div>
                 </div>
               </a>
             {/each}
-          {:else}
-            <p>No articles available for this category.</p>
-          {/if}
-        </div>
+          </div>
+        {/if}
       </section>
-    {/each}
-    
-    <!-- About Us Section -->
-    <section class="about-section">
-      <div class="about-bg"></div>
-      <div class="container about-content">
-        <div class="glass-dark p-12 sharp-edge glow">
-          <h2 class="text-3xl font-bold mb-6">About GROUND News</h2>
-          <p class="text-lg mb-6">
-            GROUND News leverages cutting-edge artificial intelligence to curate and deliver the most relevant news tailored to your interests. Our proprietary algorithms analyze thousands of sources in real-time, ensuring you stay informed with high-quality, verified information.
-          </p>
-          <p class="text-lg mb-6">
-            Founded in 2025 by a team of AI researchers and journalism experts, we're committed to combating misinformation while providing personalized news experiences that expand your perspective rather than limiting it.
-          </p>
-          <div class="flex gap-4 mt-8">
-            <button class="btn-primary sharp-edge-reverse">
-              Our Technology
-            </button>
-            <button class="btn-secondary">
-              Meet The Team
-            </button>
+    {:else}
+      <!-- Hero Section with Carousel -->
+      <Carousel {featuredNews} />
+      
+      <!-- Category Pills (Sticky Navigation) -->
+      <div class="pill-container glass-dark">
+        {#each categories as category}
+          <button 
+            class="pill {activeCategory === category ? 'active' : ''}" 
+            on:click={() => scrollToCategory(category)}
+            aria-label="Navigate to {category} section">
+            {category}
+          </button>
+        {/each}
+      </div>
+      
+      <!-- All News Sections -->
+      {#each categories as category}
+        <section id={category} class="container news-section">
+          <h2 class="text-3xl font-bold mb-8 capitalize">{category}</h2>
+          
+          <!-- News Grid -->
+          <div class="news-grid">
+            {#if newsByCategory[category]}
+              {#each newsByCategory[category] as item, i}
+                {@const sizeName = item.size || getCardSize(i, category)}
+                <a href={item.link} 
+                   class="news-card glass glow {sizeName}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                  <img src={item.image || item.imageUrl || "/placeholder.svg"} 
+                       alt={item.title} 
+                       class="news-card-image"
+                       on:load={async (e) => {
+                         if (!item.size && (item.image || item.imageUrl)) {
+                           // Set natural image dimensions
+                           const img = e.target;
+                           const ratio = img.naturalWidth / img.naturalHeight;
+                           img.style.height = ratio < 1 ? '340px' : ratio > 1.5 ? '220px' : '280px';
+                           item.size = await getOptimalCardSize(item.image || item.imageUrl);
+                         }
+                       }} />
+                  <div class="news-card-overlay"></div>
+                  <div class="news-card-content">
+                    <h3>{item.title}</h3>
+                    <p>{item.excerpt || item.summary}</p>
+                  </div>
+                </a>
+              {/each}
+            {:else}
+              <p>No articles available for this category.</p>
+            {/if}
+          </div>
+        </section>
+      {/each}
+      
+      <!-- About Us Section -->
+      <section class="about-section">
+        <div class="about-bg"></div>
+        <div class="container about-content">
+          <div class="glass-dark p-12 sharp-edge glow">
+            <h2 class="text-3xl font-bold mb-6">About GROUND News</h2>
+            <p class="text-lg mb-6">
+              GROUND News leverages cutting-edge artificial intelligence to curate and deliver the most relevant news tailored to your interests. Our proprietary algorithms analyze thousands of sources in real-time, ensuring you stay informed with high-quality, verified information.
+            </p>
+            <p class="text-lg mb-6">
+              Founded in 2025 by a team of AI researchers and journalism experts, we're committed to combating misinformation while providing personalized news experiences that expand your perspective rather than limiting it.
+            </p>
+            <div class="flex gap-4 mt-8">
+              <button class="btn-primary sharp-edge-reverse">
+                Our Technology
+              </button>
+              <button class="btn-secondary">
+                Meet The Team
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    {/if}
   </div>
   {/if}

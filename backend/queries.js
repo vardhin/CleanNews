@@ -63,6 +63,26 @@ export const getArticleByCategoryAndSerial = async (Article, category, serialNum
 // const article = await getArticleByCategoryAndSerial(Article, 'Technology', 123);
 // console.log('Article:', article); 
 
+// MongoDB query to search articles by title
+export const searchArticlesByTitle = async (Article, searchTerm, limit = 10) => {
+    try {
+        const articles = await Article.find({
+            title: { $regex: searchTerm, $options: 'i' } // case-insensitive search
+        })
+        .sort({ createdAt: -1 })
+        .limit(limit);
+        
+        return articles;
+    } catch (error) {
+        console.error('Error searching articles by title:', error);
+        throw error;
+    }
+};
+
+// Example usage:
+// const articles = await searchArticlesByTitle(Article, 'bitcoin', 10);
+// console.log('Search results:', articles);
+
 // MongoDB query to get featured articles by category
 export const getFeaturedArticlesByCategory = async (FeaturedArticle, category) => {
     try {

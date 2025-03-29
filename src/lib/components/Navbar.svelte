@@ -3,6 +3,7 @@
   import { Search, Sun, Moon } from 'lucide-svelte';
   import { theme, toggleTheme } from '$lib/stores/theme';
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
   
   const dispatch = createEventDispatcher();
   
@@ -13,6 +14,18 @@
     { name: 'Local', url: '/local' },
     { name: 'Blindspot', url: '/blindspot' }
   ];
+
+  let searchQuery = '';
+  
+  // Handle search submission
+  function handleSearch(event) {
+    if (event.type === 'keyup' && event.key !== 'Enter') return;
+    
+    if (searchQuery.trim()) {
+      // Dispatch search event up to parent component
+      dispatch('search', { query: searchQuery.trim() });
+    }
+  }
 
   // Apply theme on component mount
   onMount(() => {
@@ -40,10 +53,15 @@
       <div class="actions">
         <div class="search-container">
           <div class="search-input-wrapper">
-            <input type="text" placeholder="Search" />
-            <div class="search-icon">
+            <input 
+              type="text" 
+              placeholder="Search" 
+              bind:value={searchQuery}
+              on:keyup={handleSearch}
+            />
+            <button class="search-icon" on:click={handleSearch} aria-label="Search">
               <Search size={16} />
-            </div>
+            </button>
           </div>
         </div>
         
@@ -202,6 +220,14 @@
     color: inherit;
     opacity: 0.6;
     margin-left: 0.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .search-icon:hover {
+    opacity: 1;
   }
   
   .theme-toggle {
