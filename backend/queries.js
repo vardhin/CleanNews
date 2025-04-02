@@ -1,5 +1,5 @@
-// MongoDB query to get all unique categories
-export const getAllCategories = async (Article) => {
+// Convert exports to CommonJS
+const getAllCategories = async (Article) => {
     try {
         const categories = await Article.distinct('category');
         return categories;
@@ -14,7 +14,7 @@ export const getAllCategories = async (Article) => {
 // console.log('All categories:', categories);
 
 // MongoDB query to get top 25 articles from each category based on serialNumber
-export const getTopArticlesByCategory = async (Article) => {
+const getTopArticlesByCategory = async (Article) => {
     try {
         const categories = await getAllCategories(Article);
         const result = {};
@@ -46,7 +46,7 @@ export const getTopArticlesByCategory = async (Article) => {
 };
 
 // MongoDB query to get article by category and serialNumber
-export const getArticleByCategoryAndSerial = async (Article, category, serialNumber) => {
+const getArticleByCategoryAndSerial = async (Article, category, serialNumber) => {
     try {
         const article = await Article.findOne({
             category,
@@ -64,13 +64,12 @@ export const getArticleByCategoryAndSerial = async (Article, category, serialNum
 // console.log('Article:', article); 
 
 // MongoDB query to search articles by title
-export const searchArticlesByTitle = async (Article, searchTerm, limit = 10) => {
+const searchArticlesByTitle = async (Article, searchTerm) => {
     try {
         const articles = await Article.find({
             title: { $regex: searchTerm, $options: 'i' } // case-insensitive search
         })
-        .sort({ createdAt: -1 })
-        .limit(limit);
+        .sort({ createdAt: -1 });
         
         return articles;
     } catch (error) {
@@ -80,11 +79,11 @@ export const searchArticlesByTitle = async (Article, searchTerm, limit = 10) => 
 };
 
 // Example usage:
-// const articles = await searchArticlesByTitle(Article, 'bitcoin', 10);
+// const articles = await searchArticlesByTitle(Article, 'bitcoin');
 // console.log('Search results:', articles);
 
 // MongoDB query to get featured articles by category
-export const getFeaturedArticlesByCategory = async (FeaturedArticle, category) => {
+const getFeaturedArticlesByCategory = async (FeaturedArticle, category) => {
     try {
         const featuredArticles = await FeaturedArticle.find({
             category: category
@@ -102,7 +101,7 @@ export const getFeaturedArticlesByCategory = async (FeaturedArticle, category) =
 // console.log('Featured Articles:', featuredArticles); 
 
 // MongoDB query to get all featured articles
-export const getAllFeaturedArticles = async (FeaturedArticle) => {
+const getAllFeaturedArticles = async (FeaturedArticle) => {
     try {
         const featuredArticles = await FeaturedArticle.find().sort({ timestamp: -1 });
         return featuredArticles;
@@ -117,7 +116,7 @@ export const getAllFeaturedArticles = async (FeaturedArticle) => {
 // console.log('All Featured Articles:', allFeaturedArticles);
 
 // MongoDB query to get latest featured article and its related articles by category
-export const getLatestFeaturedArticleWithRelatedArticles = async (FeaturedArticle, Article, category) => {
+const getLatestFeaturedArticleWithRelatedArticles = async (FeaturedArticle, Article, category) => {
     try {
         // Get the latest featured article for the category
         const latestFeaturedArticle = await FeaturedArticle.findOne({
@@ -151,3 +150,13 @@ export const getLatestFeaturedArticleWithRelatedArticles = async (FeaturedArticl
 // const result = await getLatestFeaturedArticleWithRelatedArticles(FeaturedArticle, Article, 'Technology');
 // console.log('Latest Featured Article:', result.featuredArticle);
 // console.log('Related Articles:', result.relatedArticles); 
+
+module.exports = {
+    getAllCategories,
+    getTopArticlesByCategory,
+    getArticleByCategoryAndSerial,
+    searchArticlesByTitle,
+    getFeaturedArticlesByCategory,
+    getAllFeaturedArticles,
+    getLatestFeaturedArticleWithRelatedArticles
+}; 

@@ -6,7 +6,6 @@ const Article = require('./articleSchema');
 // Import all scrapers
 const AlJazeeraScraper = require('./alJazeeraScraper');
 const DeccanChronicleScraper = require('./deccanChronicleScraper');
-const HindustanTimesScraper = require('./hinduTanTimesScraper');
 const IndianExpressScraper = require('./indianExpressScraper');
 const IndiatodayScraper = require('./indiatodayScraper');
 const News9Scraper = require('./news9livescraper');
@@ -31,6 +30,18 @@ const connectDB = async () => {
     } catch (error) {
         console.error(`Error: ${error.message}`);
         process.exit(1);
+    }
+};
+
+// Function to clear the database
+const clearDatabase = async () => {
+    try {
+        log('\nClearing existing articles from database...');
+        await Article.deleteMany({});
+        log('Database cleared successfully\n');
+    } catch (error) {
+        console.error('Error clearing database:', error.message);
+        throw error;
     }
 };
 
@@ -108,7 +119,6 @@ const scrapeAllSources = async () => {
     const sources = [
         { scraper: AlJazeeraScraper, name: 'Al Jazeera' },
         { scraper: DeccanChronicleScraper, name: 'Deccan Chronicle' },
-        { scraper: HindustanTimesScraper, name: 'Hindustan Times' },
         { scraper: IndianExpressScraper, name: 'Indian Express' },
         { scraper: IndiatodayScraper, name: 'India Today' },
         { scraper: News9Scraper, name: 'News 9' },
@@ -124,18 +134,67 @@ const scrapeAllSources = async () => {
     }
 };
 
+// Function to delete articles with default images
+const deleteArticlesWithDefaultImages = async () => {
+    try {
+        log('\nChecking for articles with default images...');
+        
+        // Find and count matching articles first
+        const matchingArticles = await Article.find({
+            source: 'The Print',
+            image: { $regex: 'default', $options: 'i' }
+        });
+
+        log(`Found ${matchingArticles.length} articles with default images`);
+
+        // Log the articles that will be deleted
+        matchingArticles.forEach(article => {
+            log(`\nDeleting article:`);
+            log(`Title: ${article.title}`);
+            log(`Image URL: ${article.image}`);
+            log(`Category: ${article.category}`);
+            log(`Serial Number: ${article.serialNumber}`);
+        });
+
+        // Delete the articles
+        const result = await Article.deleteMany({
+            source: 'The Print',
+            image: { $regex: 'default', $options: 'i' }
+        });
+
+        log(`\nDeleted ${result.deletedCount} articles with default images`);
+
+    } catch (error) {
+        console.error('Error deleting articles with default images:', error);
+        log('Error deleting articles with default images: ' + error.message);
+    }
+};
+
 // Connect to MongoDB and start scraping
-connectDB().then(() => {
-    log(`\nScraping started at: ${new Date().toISOString()}\n`);
-    scrapeAllSources().finally(() => {
+connectDB().then(async () => {
+    try {
+        log(`\nScraping started at: ${new Date().toISOString()}\n`);
+        
+        // Clear the database before scraping
+        await clearDatabase();
+        
+        // Start scraping
+        await scrapeAllSources();
+        
+        // Delete articles with default images after scraping
+        await deleteArticlesWithDefaultImages();
+        
         log(`\nScraping completed at: ${new Date().toISOString()}\n`);
+    } catch (error) {
+        console.error('Error during scraping process:', error);
+    } finally {
         resultsFile.end();
         // Don't disconnect from MongoDB immediately to allow saves to complete
         setTimeout(() => {
             mongoose.connection.close();
             process.exit(0);
         }, 5000);
-    });
+    }
 });
 
 // Handle application termination

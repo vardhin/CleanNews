@@ -1,8 +1,8 @@
-import 'dotenv/config';
-import mongoose from 'mongoose';
-import Article from './articleSchema.js';
-import FeaturedArticle from './featuredArticleSchema.js';
-import { getTopArticlesByCategory } from './queries.js';
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Article = require('./articleSchema');
+const FeaturedArticle = require('./featuredArticleSchema');
+const { getTopArticlesByCategory } = require('./queries');
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -149,4 +149,8 @@ const analyzeArticles = async () => {
 };
 
 // Run the script
-analyzeArticles(); 
+analyzeArticles();
+
+module.exports = {
+    connectDB
+}; 

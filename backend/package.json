@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "News article clustering and title standardization service",
   "main": "newsProcessor.js",
-  "type": "module",
   "scripts": {
     "start": "node newsProcessor.js",
-    "api": "node endpoint.js"
+    "api": "node endpoint.js",
+    "scrape": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +19,8 @@
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "mongoose": "^7.4.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0-rc.12"
   }
 }

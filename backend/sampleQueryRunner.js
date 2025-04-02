@@ -1,11 +1,8 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import { getLatestFeaturedArticleWithRelatedArticles } from './queries.js';
-import Article from './articleSchema.js';
-import FeaturedArticle from './featuredArticleSchema.js';
-
-// Load environment variables from .env file
-dotenv.config();
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Article = require('./articleSchema');
+const FeaturedArticle = require('./featuredArticleSchema');
+const { getLatestFeaturedArticleWithRelatedArticles } = require('./queries');
 
 // Get MongoDB connection string from environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -63,5 +60,5 @@ async function runSampleQuery() {
     }
 }
 
-// Run the sample query
+// Run the script
 runSampleQuery(); 

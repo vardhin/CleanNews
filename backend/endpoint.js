@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import Article from './articleSchema.js';
-import FeaturedArticle from './featuredArticleSchema.js';
-import {
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const Article = require('./articleSchema');
+const FeaturedArticle = require('./featuredArticleSchema');
+const {
     getAllCategories,
     getTopArticlesByCategory,
     getArticleByCategoryAndSerial,
@@ -12,12 +12,8 @@ import {
     getAllFeaturedArticles,
     getLatestFeaturedArticleWithRelatedArticles,
     searchArticlesByTitle
-} from './queries.js';
+} = require('./queries');
 
-// Load environment variables
-dotenv.config();
-
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -27,8 +23,17 @@ app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('MongoDB connection error:', err));
+    .then(() => {
+        console.log('Connected to MongoDB');
+        // Only start listening after successful DB connection
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
+    });
 
 // Routes
 // Get all categories
@@ -73,18 +78,13 @@ app.get('/api/article/:category/:serialNumber', async (req, res) => {
 // Search articles by title
 app.get('/api/search', async (req, res) => {
     try {
-        const { query, limit } = req.query;
+        const { query } = req.query;
         
         if (!query) {
             return res.status(400).json({ error: 'Search query is required' });
         }
         
-        const articles = await searchArticlesByTitle(
-            Article, 
-            query, 
-            limit ? parseInt(limit) : 10
-        );
-        
+        const articles = await searchArticlesByTitle(Article, query);
         res.json(articles);
     } catch (error) {
         console.error('Error in /api/search endpoint:', error);
@@ -127,7 +127,14 @@ app.get('/api/featured-with-related/:category', async (req, res) => {
     }
 });
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Handle application termination
+process.on('SIGINT', async () => {
+    try {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed');
+        process.exit(0);
+    } catch (error) {
+        console.error('Error closing MongoDB connection:', error);
+        process.exit(1);
+    }
 });

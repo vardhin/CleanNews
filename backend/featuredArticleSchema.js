@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const featuredArticleSchema = new mongoose.Schema({
     keyInsights: {
@@ -37,4 +37,4 @@ featuredArticleSchema.index(
     { unique: true }
 );
 
-export default mongoose.model('FeaturedArticle', featuredArticleSchema); 
+module.exports = mongoose.model('FeaturedArticle', featuredArticleSchema); 

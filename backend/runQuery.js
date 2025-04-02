@@ -1,7 +1,7 @@
-import 'dotenv/config';
-import mongoose from 'mongoose';
-import Article from './articleSchema.js';
-import { getAllCategories, getTopArticlesByCategory } from './queries.js';
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Article = require('./articleSchema');
+const { getAllCategories, getTopArticlesByCategory } = require('./queries');
 
 // MongoDB Connection
 const connectDB = async () => {

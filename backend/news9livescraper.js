@@ -42,9 +42,9 @@ class News9Scraper {
             $('figure').each((i, element) => {
                 const $figure = $(element);
                 
-                // Get the image from img_wrap
-                const imageElement = $figure.find('.img_wrap img.lazy');
-                const imageUrl = imageElement.attr('src') || imageElement.attr('data-src') || '';
+                // Get the image from img_wrap - look for both src and data-src attributes
+                const imageElement = $figure.find('.img_wrap img');
+                const imageUrl = imageElement.attr('data-src') || imageElement.attr('src') || '';
                 
                 // Get the article summary from p tag
                 const summary = $figure.find('p').text().trim();
@@ -62,7 +62,7 @@ class News9Scraper {
                         summary: summary,
                         link: link,
                         category: this.getCategory(section),
-                        image: imageUrl,  // Store just the URL string instead of an object
+                        imageUrl: imageUrl.startsWith('http') ? imageUrl : `${this.baseUrl}${imageUrl}`,  // Ensure full URL
                         source: this.source
                     };
 
