@@ -254,11 +254,11 @@
     }
     
     :global([data-theme="dark"]) {
-      --bg-primary: #121212;
-      --bg-secondary: #1e1e1e;
+      --bg-secondary: #000000;
+      --bg-primary: #090909;
       --text-primary: #ffffff;
       --text-secondary: #b0b0b0;
-      --accent-color: #64ffda;
+      --accent-color: #0066cc;
       --accent-color-rgb: 100, 255, 218;
       --card-bg: rgba(15, 15, 15, 0.7);
       --card-bg-hover: rgba(25, 25, 25, 0.8);
@@ -363,7 +363,7 @@
       padding: 1rem 1.2rem;
       position: sticky;
       top: 0;
-      z-index: 5;
+      z-index: 50000;
       background: var(--glass-dark-bg);
       transition: all 0.3s ease;
       transform: translateY(0);
