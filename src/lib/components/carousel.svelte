@@ -36,37 +36,64 @@
     
     // Function to extract key points from article text
     function extractKeyPoints(article) {
+        let text = '';
+        
         // If we have a comprehensive summary, extract sentences from it
         if (article.comprehensiveSummary) {
+            // First, remove the prefix if it exists
+            let cleanSummary = article.comprehensiveSummary
+                .replace(/^Comprehensive Summary of Main Topics Covered:\s*\*?\s*/i, '');
+            
             // Split summary into sentences
-            const sentences = article.comprehensiveSummary
+            const sentences = cleanSummary
                 .split(/(?<=[.!?])\s+/)
                 .filter(s => s.trim().length > 20); // Filter out short sentences
             
             // Return first sentence if available
             if (sentences.length >= 1) {
-                return sentences[0];
+                text = sentences[0];
             }
         }
         
         // If no comprehensive summary, use key insight
-        if (article.keyInsights) {
-            return article.keyInsights;
+        if (!text && article.keyInsights) {
+            // Remove the prefix from key insights too in case it appears there
+            text = article.keyInsights.replace(/^Comprehensive Summary of Main Topics Covered:\s*\*?\s*/i, '');
         }
         
         // Fallback: Use related article summary or generic based on category
-        if (article.relatedArticles?.[0]?.summary) {
-            return article.relatedArticles[0].summary;
+        if (!text && article.relatedArticles?.[0]?.summary) {
+            text = article.relatedArticles[0].summary;
         }
         
         // Final fallback based on category
-        if (article.category === "Technology") {
-            return "Technology sector faces significant regulatory changes and market transitions";
-        } else if (article.category === "Environment") {
-            return "Climate policies set to reshape energy markets and environmental protection standards";
-        } else {
-            return "Important developments reported with significant industry implications";
+        if (!text) {
+            if (article.category === "Technology") {
+                text = "Technology sector faces significant regulatory changes and market transitions";
+            } else if (article.category === "Environment") {
+                text = "Climate policies set to reshape energy markets and environmental protection standards";
+            } else {
+                text = "Important developments reported with significant industry implications";
+            }
         }
+        
+        return text;
+    }
+    
+    // Function to parse simple markdown syntax
+    function parseMarkdown(text) {
+        if (!text) return '';
+        
+        // Bold - replace **text** with <strong>text</strong>
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Italic - replace *text* with <em>text</em>
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Links - replace [text](url) with <a href="url">text</a>
+        text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        
+        return text;
     }
     
     // Use mock data if no real data available
@@ -354,8 +381,10 @@
                 <div class="carousel-content">
                     <h2 class="carousel-category-title">{item.category}</h2>
                     <div class="carousel-subtitle">Key Insights:</div>
-                    <p class="carousel-single-insight">{extractKeyPoints(item)}</p>
-                    <a href={`/article/${item.category}/${item.serialNumbers[0]}`} class="btn-read-more">
+                    <p class="carousel-single-insight">
+                        {@html parseMarkdown(extractKeyPoints(item))}
+                    </p>
+                    <a href={`/todays-news?id=${item.serialNumbers[0]}`} class="btn-read-more">
                         Read More
                     </a>
                 </div>

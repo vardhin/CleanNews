@@ -30,6 +30,22 @@
     let isSearchLoading = false;
     let searchError = null;
     
+    // Function to parse simple markdown syntax
+    function parseMarkdown(text) {
+        if (!text) return '';
+        
+        // Bold - replace **text** with <strong>text</strong>
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Italic - replace *text* with <em>text</em>
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Links - replace [text](url) with <a href="url">text</a>
+        text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        
+        return text;
+    }
+    
     // Handle search from navbar
     async function handleSearch(event) {
       searchQuery = event.detail.query;
@@ -243,6 +259,7 @@
       --text-primary: #ffffff;
       --text-secondary: #b0b0b0;
       --accent-color: #64ffda;
+      --accent-color-rgb: 100, 255, 218;
       --card-bg: rgba(15, 15, 15, 0.7);
       --card-bg-hover: rgba(25, 25, 25, 0.8);
       --card-border: rgba(255, 255, 255, 0.05);
@@ -262,6 +279,7 @@
       --text-primary: #121212;
       --text-secondary: #555555;
       --accent-color: #0066cc;
+      --accent-color-rgb: 0, 102, 204;
       --card-bg: rgba(255, 255, 255, 0.7);
       --card-bg-hover: rgba(255, 255, 255, 0.9);
       --card-border: rgba(0, 0, 0, 0.05);
@@ -290,8 +308,6 @@
     /* Glassmorphism styles */
     .glass {
       background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border);
       box-shadow: 0 8px 32px var(--glass-shadow);
       transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -299,8 +315,6 @@
     
     .glass-dark {
       background: var(--glass-dark-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border);
       box-shadow: 0 8px 32px var(--glass-shadow);
       transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -345,8 +359,8 @@
     /* Category pills */
     .pill-container {
       display: flex;
-      gap: 1rem;
-      padding: 1rem 2rem;
+      gap: 0.75rem;
+      padding: 1rem 1.2rem;
       position: sticky;
       top: 0;
       z-index: 5;
@@ -357,9 +371,15 @@
       width: 100%;
       max-width: 1440px;
       margin: 0 auto;
-      justify-content: center;
+      justify-content: flex-start;
       border-bottom: 1px solid var(--glass-border);
       box-shadow: 0 4px 12px var(--glass-shadow);
+      overflow-x: auto;
+      scrollbar-width: none; /* Hide scrollbar for Firefox */
+    }
+    
+    .pill-container::-webkit-scrollbar {
+      display: none; /* Hide scrollbar for Chrome/Safari/Edge */
     }
     
     /* Hide pill container when navbar is showing AND user has scrolled AND not at hero */
@@ -369,103 +389,170 @@
     }
     
     .pill {
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
+      padding: 0.65rem 1.25rem;
+      border-radius: 1.2rem;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       font-size: 0.8rem;
-      font-weight: 600;
-      background: transparent;
-      border: 1px solid var(--glass-border);
+      font-weight: 500;
+      background: var(--bg-secondary);
       color: var(--text-primary);
       position: relative;
-      overflow: hidden;
+      white-space: nowrap;
+      border: none;
     }
     
     .pill::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--accent-color);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
+      content: none;
     }
     
     .pill:hover {
-      background: var(--glass-bg);
+      background: var(--accent-color);
+      color: white;
       transform: translateY(-1px);
     }
     
     .pill.active {
-      background: var(--glass-bg);
-      border-color: var(--accent-color);
-      color: var(--accent-color);
+      background: var(--accent-color);
+      color: white;
     }
     
     .pill.active::after {
-      transform: scaleX(1);
+      transform: none;
     }
     
     /* Pinterest-style masonry layout */
     .news-grid {
-      column-count: 6;
-      column-gap: 8px;
-      margin: 10px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-gap: 16px;
+      grid-auto-rows: 5px; /* Smaller grid rows for finer granularity */
+      margin: 20px 0 30px;
       width: 100%;
+      padding: 5px; /* Add slight padding to avoid edge alignment issues */
+    }
+    
+    /* Container for the grid to add subtle visual framing */
+    .grid-container {
+      position: relative;
+      padding: 8px;
+      border-radius: 10px;
+      background-color: var(--bg-secondary);
+      box-shadow: inset 0 0 20px var(--glass-shadow);
     }
     
     /* Base news card styles */
     .news-card {
-      break-inside: avoid;
-      margin-bottom: 8px;
+      grid-row-end: span 20; /* Default span, will be adjusted dynamically */
       position: relative;
       overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border-radius: 4px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border-radius: 8px;
       cursor: pointer;
-      display: inline-block;
       width: 100%;
+      height: 100%;
+      display: block;
+      backface-visibility: hidden;
+      transform: perspective(1000px) translateZ(0);
+      z-index: 1;
     }
     
+    /* Clean up pseudo elements for more reliable effect */
+    .news-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      border: 2px solid transparent;
+    }
+    
+    .news-card:hover::before {
+      opacity: 1;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 20px rgba(var(--accent-color-rgb), 0.5);
+    }
+    
+    /* Clean simple 3D transform on hover */
     .news-card:hover {
-      transform: translateY(-3px);
+      transform: perspective(1000px) translateY(-15px) translateZ(30px) rotateX(5deg);
+      box-shadow: 
+        0 20px 30px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(var(--accent-color-rgb), 0.2);
+      z-index: 10;
     }
     
-    /* Card variations */
-    .news-card.standard {
-      min-height: 280px;
+    /* Maintain the linear gradient underline */
+    .news-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        var(--accent-color) 50%, 
+        transparent 100%
+      );
+      transform: scaleX(0);
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      z-index: 3;
     }
     
-    .news-card.wide {
-      min-height: 220px;
+    .news-card:hover::after {
+      transform: scaleX(1);
     }
     
-    .news-card.square {
-      min-height: 340px;
-    }
-    
+    /* Improve image transition */
     .news-card-image {
       width: 100%;
-      height: auto;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       display: block;
       object-fit: cover;
+      object-position: center center;
+      z-index: 0;
+      transition: transform 0.5s ease, filter 0.5s ease;
     }
     
+    .news-card:hover .news-card-image {
+      transform: scale(1.1);
+      filter: brightness(1.1) contrast(1.05);
+    }
+    
+    /* Improve overlay effect */
     .news-card-overlay {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 50%;
-      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+      height: 70%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 100%);
       z-index: 1;
+      transition: all 0.4s ease;
     }
     
+    .news-card:hover .news-card-overlay {
+      height: 85%;
+      opacity: 0.95;
+      background: linear-gradient(to bottom, 
+        rgba(0,0,0,0) 0%, 
+        rgba(0,0,0,0.6) 40%,
+        rgba(0,0,0,0.9) 100%);
+    }
+    
+    /* Enhance content transition */
     .news-card-content {
       position: absolute;
       bottom: 0;
@@ -474,33 +561,63 @@
       padding: 12px 10px;
       z-index: 2;
       color: #fff;
+      transition: all 0.4s ease;
     }
     
-    .news-card-content h3 {
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      font-weight: 600;
-      line-height: 1.2;
-    }
-    
-    .news-card-content p {
-      font-size: 0.75rem;
-      opacity: 0.9;
-      margin: 0;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      line-height: 1.3;
+    .news-card:hover .news-card-content {
+      transform: translateY(-5px);
+      padding: 15px 12px;
     }
     
     /* News section */
     .news-section {
-      padding: 40px 0;
+      padding: 60px 0;
+      margin-bottom: 20px;
       scroll-margin-top: 120px; /* Adjusted to account for navbar + pills */
+      position: relative;
+      border-bottom: 1px solid var(--glass-border);
     }
     
-    /* Search results styles */
+    /* Add subtle background pattern to each section */
+    .news-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: radial-gradient(var(--glass-border) 1px, transparent 1px);
+      background-size: 25px 25px;
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    /* Last section doesn't need bottom border */
+    .news-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    /* Add more space to section headings */
+    .news-section h2 {
+      position: relative;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+    
+    /* Add decorative underline to section headings */
+    .news-section h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background-color: var(--accent-color);
+    }
+    
+    /* Search results styles with enhanced hover effects */
     .search-section {
       padding: 40px 0;
     }
@@ -524,12 +641,71 @@
       border-radius: 8px;
       overflow: hidden;
       background: var(--card-bg);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  box-shadow 0.4s ease, 
+                  background 0.3s ease;
+      position: relative;
+      clip-path: polygon(
+        0% 0%,          /* Top left */
+        100% 0%,        /* Top right */
+        100% 95%,       /* Bottom right with cut */
+        95% 100%,       /* Cut corner */
+        0% 100%         /* Bottom left */
+      );
+    }
+    
+    /* Animated gradient border */
+    .search-result-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 2px; /* Border width */
+      border-radius: 7px; /* Slightly less than the card's 8px radius */
+      background: linear-gradient(
+        135deg, 
+        transparent 0%,
+        transparent 80%,
+        var(--accent-color) 100%
+      );
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
+    .search-result-card:hover::before {
+      opacity: 1;
+    }
+    
+    .search-result-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--accent-color) 50%, 
+        transparent 100%);
+      transform: scaleX(0);
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      z-index: 2;
     }
     
     .search-result-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 
+        0 15px 30px rgba(var(--accent-color-rgb), 0.2),
+        0 5px 15px rgba(0, 0, 0, 0.15);
+      background: var(--card-bg-hover);
+    }
+    
+    .search-result-card:hover::after {
+      transform: scaleX(1);
     }
     
     .search-result-image {
@@ -539,18 +715,55 @@
       border-radius: 4px;
       margin-right: 16px;
       flex-shrink: 0;
+      transition: transform 0.6s ease, filter 0.4s ease;
+      position: relative;
+      clip-path: polygon(
+        0% 0%,          /* Top left */
+        100% 0%,        /* Top right */
+        100% 90%,       /* Bottom right with cut */
+        90% 100%,       /* Cut corner */
+        0% 100%         /* Bottom left */
+      );
+    }
+    
+    .search-result-card:hover .search-result-image {
+      transform: scale(1.05);
+      filter: saturate(1.1) contrast(1.05);
     }
     
     .search-result-content {
       flex: 1;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    
+    .search-result-card:hover .search-result-content {
+      transform: translateX(5px);
     }
     
     .search-result-title {
       font-size: 1.2rem;
       font-weight: 600;
       margin-bottom: 8px;
+      position: relative;
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+    
+    .search-result-title::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+      width: 0;
+      height: 2px;
+      background-color: var(--accent-color);
+      transition: width 0.3s ease;
+    }
+    
+    .search-result-card:hover .search-result-title::after {
+      width: 100%;
     }
     
     .search-result-summary {
@@ -575,14 +788,46 @@
       background: transparent;
       border: 1px solid var(--accent-color);
       color: var(--accent-color);
-      border-radius: 4px;
+      border-radius: 0;
       cursor: pointer;
       transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      clip-path: polygon(
+        0 0,           /* Top left */
+        calc(100% - 10px) 0,  /* Top right with cut */
+        100% 10px,     /* Top right corner cut */
+        100% 100%,     /* Bottom right */
+        10px 100%,     /* Bottom left with cut */
+        0 calc(100% - 10px)   /* Bottom left corner cut */
+      );
+    }
+    
+    .btn-back::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--accent-color);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
     }
     
     .btn-back:hover {
-      background: var(--accent-color);
       color: white;
+      border-color: var(--accent-color);
+    }
+    
+    .btn-back:hover::before {
+      transform: translateX(0);
+    }
+    
+    .btn-back:active {
+      transform: translateY(2px);
     }
     
     .search-loading, .search-error {
@@ -618,8 +863,9 @@
     
     /* About section */
     .about-section {
-      padding: 100px 0;
+      padding: 80px 0 100px;
       position: relative;
+      margin-top: 60px;
     }
     
     .about-content {
@@ -637,6 +883,19 @@
       height: 100%;
       background: var(--about-gradient);
       z-index: 1;
+      clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 100%);
+    }
+    
+    /* Add divider between last news section and about section */
+    .about-section::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--glass-border), transparent);
     }
     
     /* Button styling */
@@ -672,19 +931,19 @@
     /* Responsive adjustments */
     @media (max-width: 1400px) {
       .news-grid {
-        column-count: 5;
+        grid-template-columns: repeat(4, 1fr);
       }
     }
     
     @media (max-width: 1200px) {
       .news-grid {
-        column-count: 4;
+        grid-template-columns: repeat(3, 1fr);
       }
     }
     
     @media (max-width: 900px) {
       .news-grid {
-        column-count: 3;
+        grid-template-columns: repeat(2, 1fr);
       }
       
       .search-result-card {
@@ -699,14 +958,27 @@
       }
     }
     
+    @media (max-width: 768px) {
+      /* Mobile styles for other components */
+      .pill-container {
+        padding: 0.85rem 1rem;
+        gap: 0.6rem;
+      }
+      
+      .pill {
+        padding: 0.55rem 1rem;
+        font-size: 0.75rem;
+      }
+    }
+    
     @media (max-width: 600px) {
       .news-grid {
-        column-count: 2;
-        column-gap: 6px;
+        grid-template-columns: repeat(1, 1fr);
+        grid-gap: 12px;
       }
       
       .news-card {
-        margin-bottom: 6px;
+        margin-bottom: 0;
       }
       
       .search-info {
@@ -721,9 +993,108 @@
         column-count: 1;
       }
     }
-    
+
     @media (max-width: 768px) {
-      /* Mobile styles for other components */
+      /* Mobile styles for sections and spacing */
+      .pill-container {
+        padding: 0.85rem 1rem;
+        gap: 0.6rem;
+      }
+      
+      .pill {
+        padding: 0.55rem 1rem;
+        font-size: 0.75rem;
+      }
+      
+      .news-section {
+        padding: 40px 0;
+      }
+      
+      .news-section h2 {
+        font-size: 1.5rem;
+      }
+      
+      .about-section {
+        padding: 60px 0 80px;
+        margin-top: 40px;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .news-grid {
+        grid-template-columns: repeat(1, 1fr);
+        grid-gap: 14px;
+      }
+      
+      .grid-container {
+        padding: 6px;
+      }
+      
+      .news-card {
+        margin-bottom: 0;
+      }
+      
+      .search-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      
+      .news-section h2::after {
+        width: 40px;
+      }
+    }
+    
+    @media (max-width: 400px) {
+      .news-grid {
+        column-count: 1;
+        grid-gap: 12px;
+        margin: 15px 0 20px;
+      }
+      
+      .news-section {
+        padding: 30px 0;
+      }
+    }
+
+    /* Add highlight shine effect for card hover */
+    @keyframes shine {
+      0% {
+        background-position: -100% 0;
+      }
+      100% {
+        background-position: 250% 0;
+      }
+    }
+
+    /* Add indicator icon for card links */
+    .news-card-content::after {
+      content: '→';
+      position: absolute;
+      right: 15px;
+      bottom: 15px;
+      font-size: 1.2rem;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: all 0.3s ease;
+    }
+    
+    .news-card:hover .news-card-content::after {
+      opacity: 0.8;
+      transform: translateX(0);
+    }
+    
+    /* Card variations - more random heights */
+    .news-card.standard {
+      min-height: 90px;
+    }
+    
+    .news-card.wide {
+      min-height: 70px;
+    }
+    
+    .news-card.square {
+      min-height: 110px;
     }
   </style>
   
@@ -779,7 +1150,9 @@
                 />
                 <div class="search-result-content">
                   <h3 class="search-result-title">{article.title}</h3>
-                  <p class="search-result-summary">{article.summary}</p>
+                  <p class="search-result-summary">
+                    {@html parseMarkdown(article.summary)}
+                  </p>
                   <div class="search-result-meta">
                     <span>{article.category}</span>
                     <span>Source: {article.source}</span>
@@ -811,64 +1184,60 @@
         <section id={category} class="container news-section">
           <h2 class="text-3xl font-bold mb-8 capitalize">{category}</h2>
           
-          <!-- News Grid -->
-          <div class="news-grid">
-            {#if newsByCategory[category]}
-              {#each newsByCategory[category] as item, i}
-                {@const sizeName = item.size || getCardSize(i, category)}
-                <a href={item.link} 
-                   class="news-card glass glow {sizeName}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                  <img src={item.image || item.imageUrl || "/placeholder.svg"} 
-                       alt={item.title} 
-                       class="news-card-image"
-                       on:load={async (e) => {
-                         if (!item.size && (item.image || item.imageUrl)) {
-                           // Set natural image dimensions
+          <!-- News Grid with container -->
+          <div class="grid-container">
+            <div class="news-grid">
+              {#if newsByCategory[category]}
+                {#each newsByCategory[category] as item, i}
+                  {@const sizeName = item.size || getCardSize(i, category)}
+                  {@const randomFactor = 0.7 + Math.random() * 0.6} 
+                  <a href={item.link} 
+                     class="news-card glass glow {sizeName}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     style="grid-row-end: span {Math.floor(15 + Math.random() * 15)}; --animation-order: {i};">
+                    <img src={item.image || item.imageUrl || "/placeholder.svg"} 
+                         alt={item.title} 
+                         class="news-card-image"
+                         on:load={(e) => {
+                           // Calculate and set the grid row span based on image height with random variation
                            const img = e.target;
-                           const ratio = img.naturalWidth / img.naturalHeight;
-                           img.style.height = ratio < 1 ? '340px' : ratio > 1.5 ? '220px' : '280px';
-                           item.size = await getOptimalCardSize(item.image || item.imageUrl);
-                         }
-                       }} />
-                  <div class="news-card-overlay"></div>
-                  <div class="news-card-content">
-                    <h3>{item.title}</h3>
-                    <p>{item.excerpt || item.summary}</p>
-                  </div>
-                </a>
-              {/each}
-            {:else}
-              <p>No articles available for this category.</p>
-            {/if}
+                           const cardElement = e.target.closest('.news-card');
+                           if (cardElement) {
+                             // Set fixed height based on random factor but maintain minimum
+                             const baseHeight = 80 + Math.random() * 60;
+                             const height = baseHeight * randomFactor;
+                             
+                             // Convert to grid rows and set
+                             const rowSpan = Math.ceil(height / 5);
+                             const finalSpan = Math.max(rowSpan, 15);
+                             cardElement.style.gridRowEnd = `span ${finalSpan}`;
+                             
+                             // Apply slight random crop positioning
+                             img.style.objectPosition = `center ${Math.random() * 30 + 35}%`;
+                             
+                             // Still keep optimal size calculation for styling purposes
+                             if (!item.size && (item.image || item.imageUrl)) {
+                               const ratio = img.naturalWidth / img.naturalHeight;
+                               getOptimalCardSize(item.image || item.imageUrl).then(size => {
+                                 item.size = size;
+                               });
+                             }
+                           }
+                         }} />
+                    <div class="news-card-overlay"></div>
+                    <div class="news-card-content">
+                      <h3>{item.title}</h3>
+                    </div>
+                  </a>
+                {/each}
+              {:else}
+                <p>No articles available for this category.</p>
+              {/if}
+            </div>
           </div>
         </section>
       {/each}
-      
-      <!-- About Us Section -->
-      <section class="about-section">
-        <div class="about-bg"></div>
-        <div class="container about-content">
-          <div class="glass-dark p-12 sharp-edge glow">
-            <h2 class="text-3xl font-bold mb-6">About GROUND News</h2>
-            <p class="text-lg mb-6">
-              GROUND News leverages cutting-edge artificial intelligence to curate and deliver the most relevant news tailored to your interests. Our proprietary algorithms analyze thousands of sources in real-time, ensuring you stay informed with high-quality, verified information.
-            </p>
-            <p class="text-lg mb-6">
-              Founded in 2025 by a team of AI researchers and journalism experts, we're committed to combating misinformation while providing personalized news experiences that expand your perspective rather than limiting it.
-            </p>
-            <div class="flex gap-4 mt-8">
-              <button class="btn-primary sharp-edge-reverse">
-                Our Technology
-              </button>
-              <button class="btn-secondary">
-                Meet The Team
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
     {/if}
   </div>
   {/if}

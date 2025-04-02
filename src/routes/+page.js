@@ -40,10 +40,9 @@ export async function load({ fetch }) {
               if (relatedData && relatedData.featuredArticle && relatedData.relatedArticles && relatedData.relatedArticles.length > 0) {
                 // Ensure we have the necessary data structure for the carousel
                 featuredNews.push({
-                  // Clean up and format key insights
+                  // Preserve markdown formatting in key insights instead of stripping it
                   keyInsights: (featured.keyInsights || "Key Insights Not Available")
-                    .replace(/\*\*+/g, '')
-                    .replace(/\\n/g, ' ')
+                    .replace(/\\n/g, ' ') // Keep line breaks but replace literal \n with spaces
                     .trim(),
                   comprehensiveSummary: featured.comprehensiveSummary || "Summary Not Available",
                   category: featured.category,

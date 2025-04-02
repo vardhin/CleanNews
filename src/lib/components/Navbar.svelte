@@ -10,9 +10,8 @@
   // Menu items
   const mainMenu = [
     { name: 'Home', url: '/' },
-    { name: 'For You', url: '/for-you' },
-    { name: 'Local', url: '/local' },
-    { name: 'Blindspot', url: '/blindspot' }
+    { name: 'About', url: '/about' },
+    {name: 'News Today', url: '/news-today'}
   ];
 
   let searchQuery = '';
