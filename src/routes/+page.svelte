@@ -34,6 +34,21 @@
     function parseMarkdown(text) {
         if (!text) return '';
         
+        // Format section headers in bold with breaks before and after (case-insensitive matching for flexibility)
+        text = text.replace(/([A-Z][A-Za-z\s&]+):\s/g, '<br><br><strong class="section-header">$1:</strong><br>');
+        
+        // Add proper spacing after article references at the end of sentences
+        text = text.replace(/(\[Article \d+(?:,\s*\d+)*\])\.(\s)/g, '$1.<br><br>$2');
+        
+        // Add break after article references in the middle of text
+        text = text.replace(/(\[Article \d+(?:,\s*\d+)*\])(\s)([A-Z])/g, '$1<br>$2$3');
+        
+        // Add paragraph breaks between sentences that start new topics
+        text = text.replace(/\.(\s+)([A-Z][a-z]+\s(?:is|are|has|have|shows|indicates|highlights|demonstrates|reveals|includes|contains|offers|suggests))/g, '.<br><br>$1$2');
+        
+        // Add paragraph break after main topic statements ending with a colon
+        text = text.replace(/(:\s)([A-Z])/g, ':<br><br>$2');
+        
         // Bold - replace **text** with <strong>text</strong>
         text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         
@@ -42,6 +57,12 @@
         
         // Links - replace [text](url) with <a href="url">text</a>
         text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        
+        // Remove hanging/unpaired asterisks
+        text = text.replace(/(?<!\*)\*(?!\*)/g, '');
+        
+        // Ensure paragraph breaks around articles
+        text = text.replace(/(\. )(\[Article)/g, '.<br><br>$2');
         
         return text;
     }
@@ -638,48 +659,49 @@
     .search-result-card {
       display: flex;
       padding: 16px;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
       background: var(--card-bg);
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
                   box-shadow 0.4s ease, 
                   background 0.3s ease;
       position: relative;
-      clip-path: polygon(
-        0% 0%,          /* Top left */
-        100% 0%,        /* Top right */
-        100% 95%,       /* Bottom right with cut */
-        95% 100%,       /* Cut corner */
-        0% 100%         /* Bottom left */
-      );
+      border: 1px solid var(--card-border);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      text-decoration: none;
+      color: var(--text-primary);
     }
     
-    /* Animated gradient border */
+    /* Clean up pseudo elements for more reliable effect */
     .search-result-card::before {
       content: '';
       position: absolute;
       inset: 0;
-      padding: 2px; /* Border width */
-      border-radius: 7px; /* Slightly less than the card's 8px radius */
-      background: linear-gradient(
-        135deg, 
-        transparent 0%,
-        transparent 80%,
-        var(--accent-color) 100%
-      );
-      -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+      border-radius: 12px;
+      z-index: -1;
       opacity: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      border: 2px solid transparent;
     }
     
     .search-result-card:hover::before {
       opacity: 1;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 20px rgba(var(--accent-color-rgb), 0.5);
     }
     
+    /* Clean simple 3D transform on hover */
+    .search-result-card:hover {
+      transform: perspective(1000px) translateY(-15px) translateZ(30px) rotateX(5deg);
+      box-shadow: 
+        0 20px 30px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(var(--accent-color-rgb), 0.2);
+      z-index: 10;
+      background: var(--card-bg-hover);
+    }
+    
+    /* Maintain the linear gradient underline */
     .search-result-card::after {
       content: '';
       position: absolute;
@@ -687,21 +709,15 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, 
+      background: linear-gradient(
+        90deg, 
         transparent 0%, 
         var(--accent-color) 50%, 
-        transparent 100%);
+        transparent 100%
+      );
       transform: scaleX(0);
       transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-      z-index: 2;
-    }
-    
-    .search-result-card:hover {
-      transform: translateY(-5px) scale(1.01);
-      box-shadow: 
-        0 15px 30px rgba(var(--accent-color-rgb), 0.2),
-        0 5px 15px rgba(0, 0, 0, 0.15);
-      background: var(--card-bg-hover);
+      z-index: 3;
     }
     
     .search-result-card:hover::after {
@@ -715,27 +731,20 @@
       border-radius: 4px;
       margin-right: 16px;
       flex-shrink: 0;
-      transition: transform 0.6s ease, filter 0.4s ease;
-      position: relative;
-      clip-path: polygon(
-        0% 0%,          /* Top left */
-        100% 0%,        /* Top right */
-        100% 90%,       /* Bottom right with cut */
-        90% 100%,       /* Cut corner */
-        0% 100%         /* Bottom left */
-      );
+      transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.5s ease;
     }
     
     .search-result-card:hover .search-result-image {
-      transform: scale(1.05);
-      filter: saturate(1.1) contrast(1.05);
+      transform: scale(1.1);
+      filter: brightness(1.1) contrast(1.05);
     }
     
     .search-result-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      transition: transform 0.3s ease;
+      transition: all 0.4s ease;
+      position: relative;
     }
     
     .search-result-card:hover .search-result-content {
@@ -743,9 +752,10 @@
     }
     
     .search-result-title {
-      font-size: 1.2rem;
-      font-weight: 600;
+      font-size: 1.3rem;
+      font-weight: 700;
       margin-bottom: 8px;
+      line-height: 1.4;
       position: relative;
       display: inline-block;
       transition: transform 0.3s ease;
@@ -759,7 +769,7 @@
       width: 0;
       height: 2px;
       background-color: var(--accent-color);
-      transition: width 0.3s ease;
+      transition: width 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
     }
     
     .search-result-card:hover .search-result-title::after {
@@ -767,9 +777,39 @@
     }
     
     .search-result-summary {
-      font-size: 0.9rem;
+      font-size: 1rem;
+      line-height: 1.6;
       color: var(--text-secondary);
-      line-height: 1.5;
+    }
+    
+    .search-result-summary :global(strong) {
+      color: var(--accent-color);
+    }
+    
+    .search-result-summary :global(a) {
+      color: var(--accent-color);
+      text-decoration: none;
+      position: relative;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .search-result-summary :global(a)::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 1px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--accent-color);
+      transform: scaleX(0);
+      transform-origin: bottom right;
+      transition: transform 0.3s ease;
+    }
+    
+    .search-result-summary :global(a):hover::after {
+      transform: scaleX(1);
+      transform-origin: bottom left;
     }
     
     .search-result-meta {
@@ -777,8 +817,25 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: var(--text-secondary);
+    }
+    
+    .search-result-content::after {
+      content: '→';
+      position: absolute;
+      right: 15px;
+      bottom: 15px;
+      font-size: 1.4rem;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+      color: var(--accent-color);
+    }
+    
+    .search-result-card:hover .search-result-content::after {
+      opacity: 0.9;
+      transform: translateX(0);
     }
     
     .btn-back {
@@ -1150,12 +1207,12 @@
                 />
                 <div class="search-result-content">
                   <h3 class="search-result-title">{article.title}</h3>
-                  <p class="search-result-summary">
+                  <div class="search-result-summary">
                     {@html parseMarkdown(article.summary)}
-                  </p>
+                  </div>
                   <div class="search-result-meta">
                     <span>{article.category}</span>
-                    <span>Source: {article.source}</span>
+                    <span>Source: {article.source || 'Unknown'}</span>
                   </div>
                 </div>
               </a>
