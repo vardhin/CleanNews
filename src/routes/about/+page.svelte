@@ -9,13 +9,13 @@
         name: 'Gamidi Surya Vardhin 22BDS0114',
         role: 'Frontend Developer',
         description: 'Crafted the responsive UI and interactive elements of Clean News. Specialized in Svelte, GSAP animations, and creating seamless user experiences.',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80'
+        image: 'vardhin.jpg'
       },
       {
-        name: 'Vedant Seth 22BCE0013',
+        name: 'Vedant Seth 22BCE0393',
         role: 'Backend Developer',
-        description: 'Architected the AI-powered news aggregation system. Implemented machine learning algorithms for content classification and personalized recommendations.',
-        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80'
+        description: 'Architected the AI-powered news aggregation system, for content classification and personalized recommendations.',
+        image: 'vedant.jpg'
       }
     ];
   
